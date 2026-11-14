@@ -20,27 +20,51 @@ VOICEMAIL_RE = re.compile(r"record your message|leave (?:a|your) message|after t
 
 
 TOKEN_RE = re.compile(r"\b[A-Za-z0-9][A-Za-z0-9-]*\d[A-Za-z0-9-]*\b")
+ORDINAL_RE = re.compile(r"^\d+(?:st|nd|rd|th)$", re.I)  # "18th" is a date, not a confirmation number
+
+_DIGIT = {"zero": "0", "oh": "0", "one": "1", "two": "2", "three": "3", "four": "4", "five": "5",
+          "six": "6", "seven": "7", "eight": "8", "nine": "9"}
+_W = r"(?:zero|one|two|three|four|five|six|seven|eight|nine)"
+# Three or more digit words in a row ("one, two, three, four", "one eight eight seven six"). "oh" only counts
+# inside a run, so "Oh, one two three" is not read as 0123.
+SPOKEN_RUN = re.compile(rf"\b{_W}\b(?:[\s,.\-]+\b(?:{_W}|oh)\b){{2,}}", re.I)
+
+
+def spoken_digits(text: str) -> str:
+    """Speech-to-text often writes a number as words. Turn digit-word runs into digits; leave the rest alone."""
+    return SPOKEN_RUN.sub(lambda m: "".join(_DIGIT[w.lower()] for w in re.findall(r"[A-Za-z]+", m.group(0))),
+                          text or "")
 
 
 def find_confirmation_number(transcript: list[dict]) -> Optional[str]:
-    """Only the supplier's (`user`) turns count, and a number must contain a digit. Two accepted forms:
-    the supplier says "confirmation number is X", or answers (tersely, "it's 1234") right after the agent
-    asked for the confirmation number."""
-    asked = False
-    for turn in transcript:
-        msg = turn.get("message") or ""
+    """Only the supplier's (`user`) turns count, and a number must contain a digit (spoken digits count:
+    "one, two, three, four" is 1234). Accepted:
+    - the supplier says "confirmation number is X" anywhere;
+    - after the agent has asked for the confirmation number, a number the supplier gives in any later turn
+      (fillers such as "Uh, uh-" in between do not reset the question). If the supplier gives several, the
+      one the agent read back ("I have that as one eight eight seven six") wins, else the first."""
+    asked, candidates = False, []
+    for i, turn in enumerate(transcript):
+        msg = spoken_digits(turn.get("message") or "")
         if turn.get("role") != "user":
-            asked = "confirmation" in msg.lower() if msg else asked
+            asked = asked or "confirmation" in msg.lower()
             continue
         for m in CONF_RE.finditer(msg):
             if any(ch.isdigit() for ch in m.group(1)):
                 return m.group(1)
         if asked:
-            tok = next((t for t in TOKEN_RE.findall(msg) if len(t) >= 3), None)
-            if tok:
-                return tok
-        asked = False
-    return None
+            candidates += [(i, t) for t in TOKEN_RE.findall(msg) if len(t) >= 3 and not ORDINAL_RE.match(t)]
+    for i, tok in candidates:
+        later_agent = " ".join(spoken_digits(t.get("message") or "") for t in transcript[i + 1:] if t.get("role") != "user")
+        if re.search(rf"(?<![A-Za-z0-9]){re.escape(tok)}(?![A-Za-z0-9])", later_agent):
+            return tok
+    return candidates[0][1] if candidates else None
+
+
+def supplier_said(transcript: list[dict], number: str) -> bool:
+    """The ledger's guard: the number must appear in the supplier's own words (spoken digits normalised)."""
+    text = " ".join(spoken_digits(t.get("message") or "") for t in transcript if t.get("role") == "user")
+    return bool(number) and number in text
 
 
 def parse_post_call_payload(payload: dict) -> CallOutcome:

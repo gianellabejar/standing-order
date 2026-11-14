@@ -291,3 +291,95 @@ def test_real_webhook_with_confirmation_number_through_the_endpoint(env):
     r = client.post("/voice/post-call", json=real)
     assert r.status_code == 200 and r.json()["status"] == "confirmed"
     assert repos.orders.get(A, o.id).confirmation_number == "1234"
+
+
+# --- confirmation numbers in REAL call transcripts (fixtures/real_transcripts_confirmation.json) -------------
+
+def _real_calls():
+    import json
+    return json.load(open("fixtures/real_transcripts_confirmation.json", encoding="utf-8"))["calls"]
+
+
+def _webhook(transcript):
+    return {"type": "post_call_transcription", "data": {"status": "done", "transcript": transcript}}
+
+
+@pytest.mark.parametrize("call", _real_calls(), ids=lambda c: c["expected_confirmation_number"])
+def test_real_calls_confirmation_number_is_found(call):
+    out = parse_post_call_payload(_webhook(call["transcript"]))
+    assert (out.status, out.confirmation_number) == ("confirmed", call["expected_confirmation_number"]), call["case"]
+
+
+@pytest.mark.parametrize("call", _real_calls(), ids=lambda c: c["expected_confirmation_number"])
+def test_real_calls_confirm_the_order_in_the_ledger(env, call):
+    _, repos, prov, _ = env
+    o = planned(repos)
+    cid = ledger.start_call(A, o.id, dict(BRIEF), repos, provider=prov)
+    done = ledger.apply_outcome(A, cid, parse_post_call_payload(_webhook(call["transcript"])), repos)
+    assert done.status == OrderStatus.confirmed and done.confirmation_number == call["expected_confirmation_number"]
+
+
+def test_spoken_number_through_the_endpoint_and_the_owner_text(env):
+    from agent.orders.flow import notify_outcome
+    spoken = next(c for c in _real_calls() if c["expected_confirmation_number"] == "1234")
+    _, repos, prov, client = env
+    o = planned(repos)
+    cid = ledger.start_call(A, o.id, dict(BRIEF), repos, provider=prov)
+    body = _webhook(spoken["transcript"])
+    body["data"].update(conversation_id=cid, conversation_initiation_client_data={"dynamic_variables": {"tenant_id": A}})
+    r = client.post("/voice/post-call", json=body)
+    assert r.status_code == 200 and r.json()["status"] == "confirmed"
+    sent = []
+    text = notify_outcome(repos, A, o.id, send=lambda tid, to, b: sent.append(b), notes_llm=lambda brief, t: None)
+    assert "Confirmation number 1234" in (text or sent[-1]) and "needs you" not in (text or sent[-1])
+
+
+def test_spoken_digits_and_what_does_not_count():
+    from agent.voice import find_confirmation_number as f, spoken_digits
+    T = lambda r, m: {"role": r, "message": m}
+    assert spoken_digits("one, two, three, four.") == "1234." and spoken_digits("one eight eight seven six") == "18876"
+    assert spoken_digits("Oh, one two three") == "Oh, 123"            # a leading "oh" is a word, not a zero
+    assert spoken_digits("I need two bags, one or two more") == "I need two bags, one or two more"
+    ask = T("agent", "Could you please provide your order confirmation number?")
+    assert f([ask, T("user", "Uh, uh-"), T("agent", "[Friendly]..."), T("user", "18876.")]) == "18876"  # filler kept the question open
+    assert f([ask, T("user", "It arrives on the 18th")]) is None       # an ordinal date is not a number
+    assert f([T("agent", "The purchase order number is M B zero zero zero five."),
+              T("user", "Yes, I can confirm.")]) is None               # the agent's PO number never counts
+    assert f([ask, T("user", "PO 5521, and the confirmation is 77310"),
+              T("agent", "I have that as seven seven three one zero.")]) == "77310"
+
+
+def test_ledger_guard_still_rejects_a_number_the_supplier_never_said(env):
+    _, repos, prov, _ = env
+    o = planned(repos)
+    cid = ledger.start_call(A, o.id, dict(BRIEF), repos, provider=prov)
+    said = [{"role": "agent", "message": "Your confirmation number?"}, {"role": "user", "message": "one, two, three, four"}]
+    forged = CallOutcome(status="confirmed", confirmation_number="9999", transcript=said)
+    assert ledger.apply_outcome(A, cid, forged, repos).status == OrderStatus.needs_owner
+
+
+def test_reparse_fixes_stored_calls_once_and_only_with_the_suppliers_number(env, db):
+    import sys
+    sys.path.insert(0, "scripts")
+    from reparse_calls import reparse
+    _, repos, prov, _ = env
+    db.tenants.insert_one({"_id": A, "name": "Test shop"})
+    spoken = next(c for c in _real_calls() if c["expected_confirmation_number"] == "1234")
+    o = planned(repos, key="k-spoken")
+    cid = ledger.start_call(A, o.id, dict(BRIEF), repos, provider=prov)
+    stale = CallOutcome(status="needs_owner", transcript=spoken["transcript"],          # what the old parser recorded
+                        needs_owner_reason="call_ended_without_confirmation_number")
+    raw = _webhook(spoken["transcript"])
+    ledger.apply_outcome(A, cid, stale, repos, raw=raw)
+    o2 = planned(repos, key="k-none")
+    cid2 = ledger.start_call(A, o2.id, dict(BRIEF), repos, provider=prov)
+    nothing = post_call_payload("ended_without_number", cid2, BRIEF)
+    ledger.apply_outcome(A, cid2, parse_post_call_payload(nothing), repos, raw=nothing)
+
+    assert [c["number"] for c in reparse(db)] == ["1234"] and repos.orders.get(A, o.id).status == OrderStatus.needs_owner
+    assert [c["number"] for c in reparse(db, apply=True)] == ["1234"]
+    fixed = repos.orders.get(A, o.id)
+    assert fixed.status == OrderStatus.confirmed and fixed.confirmation_number == "1234" and fixed.needs_owner_reason is None
+    assert repos.calls.get_by_conversation(A, cid).raw_post_call == raw                 # stored webhook kept
+    assert repos.orders.get(A, o2.id).status == OrderStatus.needs_owner                  # no number: untouched
+    assert reparse(db, apply=True) == []                                                 # idempotent
