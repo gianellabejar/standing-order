@@ -46,6 +46,10 @@ def messages_from_checkpoint(saver, thread_id: str) -> list[Message]:
 
 
 class SessionManager:
+    @staticmethod
+    def for_app(repos=None, embedder=None):
+        return for_app(repos, embedder)
+
     def __init__(self, repos: Repos, llm: Callable = llm_close, embedder: Optional[Embedder] = None,
                  messages_for: Optional[Callable[[str], list[Message]]] = None, idle: timedelta = IDLE, graph=None):
         self.r, self.llm, self.idle, self.graph = repos, llm, idle, graph
@@ -53,11 +57,11 @@ class SessionManager:
         self.messages_for = messages_for or (lambda thread_id: [])
 
     def current(self, tenant_id: str, at: Optional[datetime] = None) -> Session:
-        """The open session for a message arriving now. A session idle for 30+ minutes is closed first and
-        replaced by a fresh one with a NEW thread_id."""
+        """The open session for a message arriving now. A session idle for 30+ minutes, or whose task is done,
+        is closed first and replaced by a fresh one with a NEW thread_id."""
         at = at or now()
         s = self.r.sessions.get_open(tenant_id)
-        if s and at - s.last_activity_at >= self.idle:
+        if s and (s.task_done or at - s.last_activity_at >= self.idle):
             self.close(tenant_id, s.id)
             s = None
         if s is None:
