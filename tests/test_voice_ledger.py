@@ -177,3 +177,10 @@ def test_webhook_with_bad_signature_is_rejected(db, monkeypatch):
 def test_parser_accepts_get_conversation_shape():
     p = post_call_payload("confirmed", "c", BRIEF)["data"]  # GET response has these fields at top level
     assert parse_post_call_payload(p).confirmation_number == "MB-48213"
+
+
+def test_real_no_answer_response_maps_to_needs_owner():
+    """fixtures/real_no_answer.json: a REAL GET /conversations response (phone numbers redacted)."""
+    import json
+    out = parse_post_call_payload(json.load(open("fixtures/real_no_answer.json")))
+    assert (out.status, out.confirmation_number) == ("needs_owner", None) and "no_answer" in out.needs_owner_reason

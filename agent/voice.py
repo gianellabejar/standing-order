@@ -39,6 +39,9 @@ def parse_post_call_payload(payload: dict) -> CallOutcome:
     number = find_confirmation_number(transcript)
     if number:
         return CallOutcome(status="confirmed", transcript=transcript, confirmation_number=number)
+    call = ((data.get("metadata") or {}).get("phone_call") or {})
+    if call.get("call_result") == "no_answer":  # seen in a real response (fixtures/real_no_answer.json)
+        return CallOutcome(status="needs_owner", transcript=transcript, needs_owner_reason="no_answer: supplier did not pick up")
     supplier = [t for t in transcript if t.get("role") == "user" and t.get("message")]
     if data.get("status") == "failed":
         return CallOutcome(status="failed", transcript=transcript, needs_owner_reason="call failed")
