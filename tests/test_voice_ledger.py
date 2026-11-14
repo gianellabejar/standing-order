@@ -275,3 +275,19 @@ def test_real_webhook_voicemail_through_the_endpoint(env):
     got = repos.orders.get(A, o.id)
     assert "voicemail" in got.needs_owner_reason and got.confirmation_number is None
     assert repos.calls.get_by_conversation(A, cid).raw_post_call["type"] == "post_call_transcription"
+
+
+def test_real_webhook_with_confirmation_number_through_the_endpoint(env):
+    """fixtures/real_webhook_confirmed.json: a REAL webhook (redacted), a person gave "The number is 1234"."""
+    import json
+    real = json.load(open("fixtures/real_webhook_confirmed.json"))
+    assert real["data"]["status"] == "done" and real["type"] == "post_call_transcription"
+    _, repos, prov, client = env
+    o = planned(repos)
+    cid = ledger.start_call(A, o.id, dict(BRIEF), repos, provider=prov)
+    real["data"]["conversation_id"] = cid
+    dv = real["data"]["conversation_initiation_client_data"]["dynamic_variables"]
+    dv["tenant_id"], dv["order_id"] = A, o.id
+    r = client.post("/voice/post-call", json=real)
+    assert r.status_code == 200 and r.json()["status"] == "confirmed"
+    assert repos.orders.get(A, o.id).confirmation_number == "1234"

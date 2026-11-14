@@ -3,9 +3,8 @@
 Verified against fixtures/real_webhook_voicemail.json (a real post_call_transcription webhook received by the
 deployed app, redacted): the envelope (type / event_timestamp / data), the transcript turn fields,
 data.status "done", metadata.call_duration_secs / termination_reason, the analysis keys, and the echoed
-dynamic_variables (including tenant_id and order_id). Still not seen in a real webhook: a supplier turn that
-contains a confirmation number (see fixtures/real_supplier_answered.json for that, fetched not webhook) and a
-call-initiation-failure event. "no answer" here is a transcript with no supplier turn; the real no-answer shape
+dynamic_variables (including tenant_id and order_id). A supplier giving a confirmation number is verified in
+fixtures/real_webhook_confirmed.json (a real webhook). Still not seen in a real webhook: a call-initiation-failure event. "no answer" here is a transcript with no supplier turn; the real no-answer shape
 is fixtures/real_no_answer.json (metadata.phone_call.call_result == "no_answer").
 """
 import time
