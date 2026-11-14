@@ -11,3 +11,7 @@ pypdf
 tiktoken
 langgraph
 langgraph-checkpoint-mongodb
+jinja2
+bcrypt
+itsdangerous
+tzdata
