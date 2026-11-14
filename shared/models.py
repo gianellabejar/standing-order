@@ -39,6 +39,7 @@ class Session(Doc):
     thread_id: str
     started_at: datetime = Field(default_factory=now)
     last_activity_at: datetime = Field(default_factory=now)
+    task_done: bool = False         # the order finished; the session closes on the next activity
     context_tokens: int = 0         # size of the context pack this session started from (estimate)
     closed_at: Optional[datetime] = None
     summary: Optional[str] = None   # <= 150 tokens
@@ -81,7 +82,8 @@ class PriceQuote(Doc):
     valid_until: datetime
     source: dict[str, Any]          # {"document_id": ..., "page": ...}
     status: str = "active"          # active | superseded
-    superseded_by: Optional[str] = None  # id of the newer quote that replaced this one
+    supersedes: Optional[str] = None     # on the NEW quote: the quote it replaced
+    superseded_by: Optional[str] = None  # on the OLD quote: id of the newer quote that replaced it
 
 
 class Document(Doc):
@@ -120,6 +122,10 @@ class Order(Doc):
     call_id: Optional[str] = None
     tokens: dict[str, int] = {}
     needs_owner_reason: Optional[str] = None
+    unit_price: Optional[float] = None
+    total: Optional[float] = None
+    awaiting_approval: bool = False  # owner must reply YES before the call is placed
+    session_id: Optional[str] = None
     created_at: datetime = Field(default_factory=now)
 
 
@@ -130,6 +136,7 @@ class Call(Doc):
     provider: str = ""              # "mock" or "elevenlabs": which provider actually ran
     transcript: list[dict[str, Any]] = []
     outcome: Optional[dict[str, Any]] = None
+    notes: Optional[dict[str, Any]] = None  # LLM-extracted terms/unclear points; never decides confirmation
     raw_post_call: Optional[dict[str, Any]] = None  # the payload exactly as received, for provenance
 
 

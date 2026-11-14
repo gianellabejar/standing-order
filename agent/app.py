@@ -45,12 +45,21 @@ async def post_call(request: Request, db=Depends(get_db)):
         log.warning("post-call webhook rejected: no tenant_id dynamic variable or conversation_id (keys=%s)",
                     sorted(dv)[:12])
         raise HTTPException(400, "payload lacks tenant_id dynamic variable or conversation_id")
+    repos = ledger.Repos(db)
+    prior = repos.calls.get_by_conversation(tenant_id, cid)
+    first_delivery = prior is not None and prior.outcome is None
     try:
-        order = ledger.apply_outcome(tenant_id, cid, outcome, ledger.Repos(db), raw=payload)
+        order = ledger.apply_outcome(tenant_id, cid, outcome, repos, raw=payload)
     except LookupError as e:
         log.warning("post-call webhook rejected: %s (conversation_id=%s)", e, cid)
         raise HTTPException(404, str(e))
     log.warning("provider=%s order=%s status=%s", provider.name, order.id, order.status.value)
+    if first_delivery:  # a duplicate webhook must not text the owner twice
+        try:
+            from agent.orders.flow import notify_outcome
+            notify_outcome(repos, tenant_id, order.id)
+        except Exception as e:  # the order is already updated; a failed text must not fail the webhook
+            log.warning("could not notify owner (%s: %s)", type(e).__name__, e)
     return {"provider": provider.name, "order_id": order.id, "status": order.status.value}
 
 

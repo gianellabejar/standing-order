@@ -116,6 +116,9 @@ class Sessions(_Repo):
     def touch(self, tenant_id: str, id: str, at=None) -> None:
         self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"last_activity_at": at or now()}})
 
+    def mark_done(self, tenant_id: str, id: str) -> None:
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"task_done": True}})
+
     def record_context_tokens(self, tenant_id: str, id: str, tokens: int) -> None:
         self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"context_tokens": tokens}})
 
@@ -176,6 +179,15 @@ class Memories(_Repo):
 class PriceQuotes(_Repo):
     name, model = "price_quotes", PriceQuote
 
+    def supersede(self, tenant_id: str, old_id: str, new: PriceQuote) -> str:
+        """The owner corrected a price: new active quote pointing at the old one, old becomes `superseded`."""
+        if self.get(tenant_id, old_id) is None:
+            raise LookupError("quote not found for this tenant")
+        new.supersedes = old_id
+        new_id = self.insert(tenant_id, new)
+        self._c.update_one(self._q(tenant_id, _id=old_id), {"$set": {"status": "superseded", "superseded_by": new_id}})
+        return new_id
+
     def list_valid(self, tenant_id: str, sku: Optional[str] = None):
         flt = {"status": "active", "valid_until": {"$gt": now()}}
         return self.list(tenant_id, **flt, **({"sku": sku} if sku else {}))
@@ -220,6 +232,18 @@ class Orders(_Repo):
         d = self._c.find_one(self._q(tenant_id, idempotency_key=idempotency_key))
         return Order(**d) if d else None
 
+    def awaiting_approval(self, tenant_id: str):
+        d = self._c.find_one(self._q(tenant_id, awaiting_approval=True, status=OrderStatus.planned.value),
+                             sort=[("created_at", -1)])
+        return Order(**d) if d else None
+
+    def last_confirmed(self, tenant_id: str):
+        d = self._c.find_one(self._q(tenant_id, status=OrderStatus.confirmed.value), sort=[("created_at", -1)])
+        return Order(**d) if d else None
+
+    def update_fields(self, tenant_id: str, id: str, **fields) -> None:
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": fields})
+
     def set_status(self, tenant_id: str, id: str, status: OrderStatus, **fields) -> None:
         self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"status": status.value, **fields}})
 
@@ -230,6 +254,9 @@ class Calls(_Repo):
     def get_by_conversation(self, tenant_id: str, conversation_id: str):
         d = self._c.find_one(self._q(tenant_id, conversation_id=conversation_id))
         return Call(**d) if d else None
+
+    def record_notes(self, tenant_id: str, id: str, notes: dict) -> None:
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"notes": notes}})
 
     def record_outcome(self, tenant_id: str, id: str, transcript: list, outcome: dict, raw: Optional[dict] = None) -> None:
         self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"transcript": transcript, "outcome": outcome,

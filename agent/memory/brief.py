@@ -25,13 +25,21 @@ def build_call_brief(tenant_id: str, order: Order, decision: Decision, repos: Op
     seq = 1 + sum(1 for o in repos.orders.list(tenant_id, limit=10000) if o.po_number)
     item = order.items[0] if order.items else {}
     tenant = repos.tenants.get(tenant_id)
+    if len(order.items) > 1:  # the agent prompt has one item/quantity/price slot: say all of it in words
+        item_v = " and ".join(i.get("name") or i["sku"] for i in order.items)
+        qty_v = " and ".join(f"{i['qty']} {i.get('unit', 'bag')}s of {i.get('name') or i['sku']}" for i in order.items)
+        price_v = f"{order.total:.2f} dollars in total" if order.total else f"{decision.unit_price} each"
+    else:
+        item_v = item.get("name") or item.get("sku", "the order")
+        qty_v = sum(i.get("qty", 0) for i in order.items) or item.get("qty", 1)
+        price_v = decision.unit_price
     return {
         "shop_name": tenant.name if tenant else tenant_id,
         "contact_name": contact or "the person who takes orders",
-        "item": item.get("name") or item.get("sku", "the order"),
-        "quantity": sum(i.get("qty", 0) for i in order.items) or item.get("qty", 1),
+        "item": item_v,
+        "quantity": qty_v,
         "unit": item.get("unit", "bag"),
-        "price": decision.unit_price,
+        "price": price_v,
         "po_number": po_fmt.format(seq) if po_fmt else f"PO-{seq:04d}",
         "channel": "phone" if channel_v == "phone" else "email",
         "memories_used": used,
