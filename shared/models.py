@@ -116,6 +116,7 @@ class Call(Doc):
     provider: str = ""              # "mock" or "elevenlabs": which provider actually ran
     transcript: list[dict[str, Any]] = []
     outcome: Optional[dict[str, Any]] = None
+    raw_post_call: Optional[dict[str, Any]] = None  # the payload exactly as received, for provenance
 
 
 class AuditEvent(Doc):

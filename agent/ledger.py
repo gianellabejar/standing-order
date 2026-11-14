@@ -49,7 +49,8 @@ def start_call(tenant_id: str, order_id: str, context: dict, repos: Repos, provi
     return call_id
 
 
-def apply_outcome(tenant_id: str, conversation_id: str, outcome: CallOutcome, repos: Repos) -> Order:
+def apply_outcome(tenant_id: str, conversation_id: str, outcome: CallOutcome, repos: Repos,
+                  raw: Optional[dict] = None) -> Order:
     call = repos.calls.get_by_conversation(tenant_id, conversation_id)
     if call is None:
         raise LookupError("no call with that conversation id for this tenant")
@@ -64,7 +65,7 @@ def apply_outcome(tenant_id: str, conversation_id: str, outcome: CallOutcome, re
         reason = outcome.needs_owner_reason or "confirmation number not found in transcript"
         status = OrderStatus.failed if outcome.status == "failed" else OrderStatus.needs_owner
         fields = {"needs_owner_reason": reason}
-    repos.calls.record_outcome(tenant_id, call.id, outcome.transcript, outcome.model_dump(exclude={"transcript"}))
+    repos.calls.record_outcome(tenant_id, call.id, outcome.transcript, outcome.model_dump(exclude={"transcript"}), raw)
     repos.orders.set_status(tenant_id, order.id, status, **fields)
     repos.audit.insert(tenant_id, AuditEvent(tenant_id=tenant_id, actor="code", event=f"order.{status.value}",
                                              ids=[order.id, call.id]))

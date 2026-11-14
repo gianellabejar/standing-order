@@ -228,3 +228,10 @@ def test_real_dynamic_variables_are_echoed_back():
 def find_number(transcript):
     from agent.voice import find_confirmation_number
     return find_confirmation_number(transcript)
+
+
+def test_raw_post_call_payload_is_stored_on_the_call(env):
+    _, repos, prov, _ = env
+    order, cid = run_call(repos, prov, "confirmed")
+    raw = repos.calls.get_by_conversation(A, cid).raw_post_call
+    assert raw["type"] == "post_call_transcription" and raw["data"]["conversation_id"] == cid

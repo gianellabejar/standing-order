@@ -162,8 +162,9 @@ class Calls(_Repo):
         d = self._c.find_one(self._q(tenant_id, conversation_id=conversation_id))
         return Call(**d) if d else None
 
-    def record_outcome(self, tenant_id: str, id: str, transcript: list, outcome: dict) -> None:
-        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"transcript": transcript, "outcome": outcome}})
+    def record_outcome(self, tenant_id: str, id: str, transcript: list, outcome: dict, raw: Optional[dict] = None) -> None:
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"transcript": transcript, "outcome": outcome,
+                                                               "raw_post_call": raw}})
 
 
 class AuditEvents(_Repo):
