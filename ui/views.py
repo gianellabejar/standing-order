@@ -55,8 +55,16 @@ def item_label(order: Order) -> str:
 
 
 def channel_label(order: Order) -> str:
-    phone = order.call_id or order.channel == "phone"
-    return "Call" if phone else "Email"
+    """A call was placed, or the order says phone, or (older/agent orders without the field) the supplier
+    is one that takes phone orders."""
+    if order.call_id or order.channel == "phone":
+        return "Call"
+    if order.channel is None and order.supplier_id:
+        try:
+            return "Call" if get_supplier(order.supplier_id).get("order_channel") == "phone" else "Email"
+        except KeyError:
+            pass
+    return "Email"
 
 
 def status_chip(order: Order) -> tuple[str, str]:

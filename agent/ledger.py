@@ -59,8 +59,9 @@ def place_with_memory(tenant_id: str, order_id: str, decision, repos: Repos, pro
         raise LookupError("order not found for this tenant")
     brief = build_call_brief(tenant_id, order, decision, repos)
     if brief["channel"] != "phone":
-        repos.orders.set_status(tenant_id, order_id, OrderStatus.needs_owner,
-                                needs_owner_reason=f"{decision.supplier_id} is not known to take phone orders")
+        from agent.orders.email import place_order_email
+        place_order_email(tenant_id, order, repos, reason=f"{decision.supplier_id} is not known to take phone orders, "
+                                                          "and email ordering is not built yet")
         return None
     memories_used = sorted(set(order.memories_used) | set(brief.pop("memories_used")))
     brief.pop("channel")

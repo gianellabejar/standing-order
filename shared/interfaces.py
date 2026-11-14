@@ -40,14 +40,20 @@ class VoiceProvider(Protocol):
 def handle_owner_text(tenant_id: str, text: str, message_sid: str) -> Optional[str]:
     """Entry point from /sms/inbound (real Twilio or the simulator) into the agent. Returns the short
     reply sent back as TwiML, or None for no immediate reply. Must return within a few seconds
-    (Twilio times out at 15 s); slow work replies later via ingest.sms.send_sms."""
-    raise NotImplementedError
+    (Twilio times out at 15 s); slow work replies later via ingest.sms.send_sms.
+    Implemented in agent/orders/flow.py."""
+    from agent.orders.flow import for_app
+    return for_app().handle(tenant_id, text, message_sid)
 
 
 def parse_owner_text(tenant_id: str, text: str) -> ParsedOrder:
     """One structured LLM call (Pydantic-validated) turning an owner SMS into items, quantities,
-    deadline and the 'same as last time' flag. Logs prompt/completion tokens."""
-    raise NotImplementedError
+    deadline and the 'same as last time' flag. Logs prompt/completion tokens.
+    Implemented in agent/orders/parse.py (the flow uses the fuller ParsedText)."""
+    from agent.orders.parse import llm_parse
+    p, _ = llm_parse(text, "", [])
+    return ParsedOrder(items=[{"name": i.name, "qty": i.qty} for i in p.items], deadline=p.deadline,
+                       same_as_last_time=p.same_as_last_time)
 
 
 def build_context_pack(tenant_id: str, session: Session, query: str = "", max_tokens: int = 1500) -> str:
@@ -82,9 +88,12 @@ def place_order_call(tenant_id: str, order: Order, context: dict) -> str:
     return start_call(tenant_id, order.id, context, Repos())
 
 
-def place_order_email(tenant_id: str, order: Order) -> str:
-    """Fallback: email the order to the supplier. Returns the sent document id."""
-    raise NotImplementedError
+def place_order_email(tenant_id: str, order: Order) -> Optional[str]:
+    """Fallback: email ordering is NOT built. Writes the order as needs_owner with a reason; returns None.
+    Implemented in agent/orders/email.py."""
+    from agent.ledger import Repos
+    from agent.orders.email import place_order_email as impl
+    return impl(tenant_id, order, Repos())
 
 
 def ingest_email(tenant_id: str, raw: bytes, ref: str = "upload") -> list[PriceQuote]:

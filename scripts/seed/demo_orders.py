@@ -26,7 +26,6 @@ REQUESTS = [
     ("ord_seed_maple_prev", "FLR-AP-2KG", 40, "Need 40 bags of flour for Friday.", "Friday", 7, "confirmed"),
     ("ord_seed_maple_oats", "OAT-RL-1KG", 10, "10 bags of oats too please, Tuesday is fine.", "Tuesday", 2,
      "ended_without_number"),
-    ("ord_seed_maple_sugar", "SUG-GR-2KG", 20, "Can you get 20 bags of sugar for next week?", "Next week", 0, None),
 ]
 
 

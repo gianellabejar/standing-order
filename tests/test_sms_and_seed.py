@@ -52,7 +52,7 @@ def client(db):
 
 def test_reset_is_fast_and_complete(db):
     assert db.seed_seconds < 10, db.seed_seconds
-    assert db.seed_counts == {"tenants": 2, "documents": 4, "price_quotes": 12, "memories": 7, "orders": 3,
+    assert db.seed_counts == {"tenants": 2, "documents": 4, "price_quotes": 12, "memories": 7, "orders": 2,
                               "calls": 2, "audit_events": 2, "users": 0}
     assert all(m.seeded for m in dbm.Memories(db).list("maple"))
 

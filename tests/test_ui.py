@@ -75,14 +75,14 @@ def test_page_shows_tenant_tiles_and_table(maple, db):
     t = text_of(page(maple))
     assert "Sample data" in t and "Signed in as Maple Bakery" in t
     assert "Every order, with its reasons." in t
-    # tiles from the database: 1 needs you (oats call ended without a number), 1 confirmed, 3 of 3 used memory
-    assert re.search(r"Needs you 1 ", t) and re.search(r"Confirmed 1 ", t) and "3 of 3" in t
-    for po in ("MB-0001", "MB-0002", "No PO yet"):
+    # tiles from the database: 1 needs you (oats call ended without a number), 1 confirmed, 2 of 2 used memory
+    assert re.search(r"Needs you 1 ", t) and re.search(r"Confirmed 1 ", t) and "2 of 2" in t
+    for po in ("MB-0001", "MB-0002"):
         assert po in t
     assert "40 bags of flour" in t and "Supplier B" in t and "$128.00" in t
 
 
-def test_confirmation_block_only_with_a_number(maple):
+def test_confirmation_block_only_with_a_number(maple, db):
     t = text_of(page(maple, order="MB-0001"))
     assert "Order MB-0001" in t and "40 bags of flour from Supplier B" in t
     assert "Confirmation number MB-48213 Captured from the call transcript." in t
@@ -95,9 +95,13 @@ def test_confirmation_block_only_with_a_number(maple):
     detail = html[html.index('id="detail"'):]
     assert "Confirmed" not in text_of(detail)  # never shown for an order without a number
 
-    t = text_of(page(maple, order="ord_seed_maple_sugar"))
-    assert "No confirmation number yet Waiting for your YES" in t
-    assert "No call has been placed for this order yet." in t
+    from shared.models import Order
+    dbm.Orders(db).insert("maple", Order(id="ord_pending", tenant_id="maple", idempotency_key="sms:SMx",
+                                         supplier_id="supplier_b", awaiting_approval=True, total=47.0,
+                                         items=[{"sku": "SUG-GR-2KG", "qty": 20, "unit": "bag", "name": "sugar"}]))
+    t = text_of(page(maple, order="ord_pending"))  # an agent order waiting for YES: no PO, no call yet
+    assert "Order (no PO number yet)" in t and "No confirmation number yet Waiting for your YES" in t
+    assert "No call has been placed for this order yet." in t and "Planned" in t
 
 
 def test_confirmed_status_without_number_is_not_shown_confirmed(maple, db):
@@ -228,3 +232,13 @@ def test_cookies_secure_only_over_https(db, monkeypatch):
     assert "secure" in r.headers["set-cookie"].lower()
     r = TestClient(app_module.app).get("/login")
     assert "secure" not in r.headers["set-cookie"].lower() and "httponly" in r.headers["set-cookie"].lower()
+
+
+def test_channel_for_orders_without_the_field():
+    from shared.models import Order
+    from ui import views
+    base = dict(tenant_id="maple", idempotency_key="k")
+    assert views.channel_label(Order(**base, supplier_id="supplier_b")) == "Call"    # B takes phone orders
+    assert views.channel_label(Order(**base, supplier_id="supplier_a")) == "Email"
+    assert views.channel_label(Order(**base, supplier_id="supplier_a", call_id="c1")) == "Call"
+    assert views.channel_label(Order(**base, supplier_id="supplier_b", channel="email")) == "Email"
