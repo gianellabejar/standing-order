@@ -55,26 +55,25 @@ def seed(db) -> dict:
     docs = {"supplier_b": ("pdf", paths["pdf"], 1), "supplier_a": ("email", paths["eml"], None)}
     n_docs = n_quotes = 0
     for t in tenants:
-        tid = t["id"]
+        tid, documents, quotes = t["id"], [], []
         for supplier_id, (kind, path, page) in docs.items():
             doc_id = f"doc_{tid}_{supplier_id}_{kind}"
-            dbm.Documents(db).insert(tid, Document(id=doc_id, tenant_id=tid, kind=kind,
-                                                   ref=str(path.relative_to(ROOT).as_posix()),
-                                                   sha256=hashlib.sha256(path.read_bytes()).hexdigest()))
-            n_docs += 1
-            for sku, price in cat[supplier_id].items():
-                dbm.PriceQuotes(db).insert(tid, PriceQuote(
-                    id=f"q_{tid}_{supplier_id}_{sku}", tenant_id=tid, supplier_id=supplier_id, sku=sku,
-                    unit=cat["skus"][sku]["unit"], price=price, valid_until=valid_until,
-                    source={"document_id": doc_id, "page": page, "seeded": True}))
-                n_quotes += 1
+            documents.append(Document(id=doc_id, tenant_id=tid, kind=kind,
+                                      ref=str(path.relative_to(ROOT).as_posix()),
+                                      sha256=hashlib.sha256(path.read_bytes()).hexdigest()))
+            quotes += [PriceQuote(id=f"q_{tid}_{supplier_id}_{sku}", tenant_id=tid, supplier_id=supplier_id,
+                                  sku=sku, unit=cat["skus"][sku]["unit"], price=price, valid_until=valid_until,
+                                  source={"document_id": doc_id, "page": page, "seeded": True})
+                       for sku, price in cat[supplier_id].items()]
+        n_docs += len(dbm.Documents(db).insert_many(tid, documents))
+        n_quotes += len(dbm.PriceQuotes(db).insert_many(tid, quotes))
     counts["documents"], counts["price_quotes"] = n_docs, n_quotes
 
     mems = load("memories.json")
-    for m in mems:
-        dbm.Memories(db).insert(m["tenant"], Memory(id=m["id"], tenant_id=m["tenant"], kind=m["kind"],
-                                                    text=m["text"], structured=m["structured"],
-                                                    source=SEED_SOURCE, seeded=True))
+    for t in tenants:
+        dbm.Memories(db).insert_many(t["id"], [
+            Memory(id=m["id"], tenant_id=t["id"], kind=m["kind"], text=m["text"], structured=m["structured"],
+                   source=SEED_SOURCE, seeded=True) for m in mems if m["tenant"] == t["id"]])
     counts["memories"] = len(mems)
 
     # One prior Maple order so "same as last time" has something to resolve. Harbour has none.

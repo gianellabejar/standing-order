@@ -4,7 +4,7 @@ because the tenant is not known yet at SMS routing and login; nothing else may b
 import os
 from datetime import timedelta
 from functools import lru_cache
-from typing import Optional
+from typing import List, Optional, Sequence
 from uuid import uuid4
 
 from pymongo import ASCENDING, MongoClient
@@ -51,6 +51,14 @@ class _Repo:
         d["tenant_id"] = self._q(tenant_id)["tenant_id"]
         d.setdefault("_id", uuid4().hex)  # string ids, so get(tenant_id, id) round-trips
         return str(self._c.insert_one(d).inserted_id)
+
+    def insert_many(self, tenant_id: str, objs: Sequence) -> List[str]:  # `list` here = the method above
+        """One round trip. Every document is stamped with this tenant_id."""
+        tid = self._q(tenant_id)["tenant_id"]
+        docs = [{**o.model_dump(by_alias=True, exclude_none=True), "tenant_id": tid} for o in objs]
+        for d in docs:
+            d.setdefault("_id", uuid4().hex)
+        return list(self._c.insert_many(docs).inserted_ids) if docs else []
 
 
 class Tenants(_Repo):
@@ -180,10 +188,8 @@ def drop_app_database(db=None) -> str:
 def ensure_indexes(db=None) -> None:
     """Idempotent: safe to call on every startup and after a reset."""
     db = db if db is not None else _db()
-    existing = set(db.list_collection_names())
-    for c in COLLECTIONS:
-        if c not in existing:
-            db.create_collection(c)  # search indexes need the collection to exist
+    if "memories" not in db.list_collection_names():
+        db.create_collection("memories")  # the search index needs it; create_index creates the rest
     db.orders.create_index([("tenant_id", ASCENDING), ("idempotency_key", ASCENDING)], unique=True)
     db.memories.create_index("purge_at", expireAfterSeconds=0)  # TTL
     for c in ("memories", "price_quotes", "sessions", "documents", "calls", "audit_events", "users"):

@@ -8,13 +8,16 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from dotenv import load_dotenv  # noqa: E402
 
+load_dotenv(ROOT / ".env")
 if not os.environ.get("MONGODB_URI"):
     pytest.skip("MONGODB_URI not set", allow_module_level=True)
 os.environ["MONGODB_DB"] = "orderdesk_test"
 
 from fastapi.testclient import TestClient  # noqa: E402
 
+from ingest.app import app  # noqa: E402  (import first: it runs load_dotenv, the fixture then overrides)
 from scripts import sms_sim  # noqa: E402
 from scripts.seed import seed as seedmod  # noqa: E402
 from shared import db as dbm  # noqa: E402
@@ -40,7 +43,6 @@ def db():
 
 @pytest.fixture
 def client(db):
-    from ingest.app import app
     return TestClient(app)
 
 
