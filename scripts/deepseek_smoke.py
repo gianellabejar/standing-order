@@ -9,7 +9,7 @@ from langchain_deepseek import ChatDeepSeek
 from pydantic import BaseModel
 
 load_dotenv()
-MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-v4-flash")  # check api-docs.deepseek.com; override in .env
+MODEL = os.environ.get("DEEPSEEK_MODEL") or "deepseek-flash"  # ids come from GET /models; override in .env
 
 
 class Order(BaseModel):

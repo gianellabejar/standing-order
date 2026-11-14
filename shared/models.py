@@ -105,6 +105,7 @@ class Order(Doc):
     confirmation_number: Optional[str] = None
     call_id: Optional[str] = None
     tokens: dict[str, int] = {}
+    needs_owner_reason: Optional[str] = None
     created_at: datetime = Field(default_factory=now)
 
 
@@ -112,6 +113,7 @@ class Call(Doc):
     conversation_id: str            # ElevenLabs
     order_id: str
     brief: dict[str, Any]
+    provider: str = ""              # "mock" or "elevenlabs": which provider actually ran
     transcript: list[dict[str, Any]] = []
     outcome: Optional[dict[str, Any]] = None
 

@@ -50,7 +50,7 @@ Fields we rely on:
 - `data.conversation_id` : joins to `calls.conversation_id`
 - `data.status`
 - `data.transcript[]` : entries with `role` (`agent` or `user`) and `message` (message field name unverified)
-- `data.conversation_initiation_client_data.dynamic_variables` : to find the order (we add `order_id`; unverified that it is echoed back, otherwise match on `conversation_id`)
+- `data.conversation_initiation_client_data.dynamic_variables` : shown in the docs' example payload, so we send `tenant_id` and `order_id` as variables and read them back (still unverified against a real call). The tenant is then checked against our own `calls` record, so a forged id cannot cross tenants.
 - Not relied on: `analysis` and `data_collection_results` (names unverified). Outcome is extracted from the transcript by our own structured LLM call.
 
 An order is `confirmed` only if the extracted outcome has a confirmation number.

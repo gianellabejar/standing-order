@@ -4,6 +4,7 @@ because the tenant is not known yet at SMS routing and login; nothing else may b
 import os
 from datetime import timedelta
 from functools import lru_cache
+from uuid import uuid4
 from typing import Optional
 
 from pymongo import ASCENDING, MongoClient
@@ -19,7 +20,11 @@ EMBED_DIM = 1024  # voyage-3.5 default
 
 @lru_cache
 def _db():
-    return MongoClient(os.environ["MONGODB_URI"])[os.environ.get("MONGODB_DB", "orderdesk")]
+    return MongoClient(os.environ["MONGODB_URI"], tz_aware=True)[os.environ.get("MONGODB_DB", "orderdesk")]
+
+
+def get_db():
+    return _db()
 
 
 class _Repo:
@@ -44,6 +49,7 @@ class _Repo:
     def insert(self, tenant_id: str, obj) -> str:
         d = obj.model_dump(by_alias=True, exclude_none=True)
         d["tenant_id"] = tenant_id
+        d.setdefault("_id", uuid4().hex)  # string ids, so get(tenant_id, id) round-trips
         return str(self._c.insert_one(d).inserted_id)
 
 
@@ -53,6 +59,11 @@ class Tenants(_Repo):
     def get(self, tenant_id: str, id: Optional[str] = None):
         d = self._c.find_one({"_id": self._q(tenant_id)["tenant_id"]})
         return Tenant(**d) if d else None
+
+    def insert(self, tenant_id: str, obj) -> str:
+        d = obj.model_dump(by_alias=True, exclude_none=True)
+        d["_id"] = tenant_id
+        return str(self._c.insert_one(d).inserted_id)
 
     def resolve_by_phone(self, phone: str) -> Optional[Tenant]:
         """UNSCOPED by necessity: inbound SMS routing. Returns only the tenant record."""
@@ -139,6 +150,13 @@ class Orders(_Repo):
 
 class Calls(_Repo):
     name, model = "calls", Call
+
+    def get_by_conversation(self, tenant_id: str, conversation_id: str):
+        d = self._c.find_one(self._q(tenant_id, conversation_id=conversation_id))
+        return Call(**d) if d else None
+
+    def record_outcome(self, tenant_id: str, id: str, transcript: list, outcome: dict) -> None:
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"transcript": transcript, "outcome": outcome}})
 
 
 class AuditEvents(_Repo):

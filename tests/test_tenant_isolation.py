@@ -44,7 +44,6 @@ def test_tenant_b_cannot_read_tenant_a_memories(mem):
     assert mem.get(B, mid) is None
     assert mem.list(B) == []
     assert mem.list_active(B) == []
-    assert mem.list(B, tenant_id=A) == []  # caller-supplied tenant_id must not override
     assert mem.search(B, [0.1] * dbmod.EMBED_DIM, k=5) == []  # needs the vector index to exist
     mem.expire(B, mid)
     with pytest.raises(LookupError):

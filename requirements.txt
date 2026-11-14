@@ -4,3 +4,6 @@ pytest
 langchain-deepseek
 httpx
 python-dotenv
+fastapi
+uvicorn
+mongomock
