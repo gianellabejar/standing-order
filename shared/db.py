@@ -94,6 +94,20 @@ class Sessions(_Repo):
         self._c.update_one(self._q(tenant_id, _id=id),
                            {"$set": {"closed_at": now(), "summary": summary, "tokens": tokens}})
 
+    def get_open(self, tenant_id: str) -> Optional[Session]:
+        d = self._c.find_one(self._q(tenant_id, closed_at=None), sort=[("started_at", -1)])
+        return Session(**d) if d else None
+
+    def latest_closed(self, tenant_id: str) -> Optional[Session]:
+        d = self._c.find_one(self._q(tenant_id, closed_at={"$ne": None}), sort=[("closed_at", -1)])
+        return Session(**d) if d else None
+
+    def touch(self, tenant_id: str, id: str, at=None) -> None:
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"last_activity_at": at or now()}})
+
+    def record_context_tokens(self, tenant_id: str, id: str, tokens: int) -> None:
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"context_tokens": tokens}})
+
 
 class Memories(_Repo):
     name, model = "memories", Memory
@@ -112,6 +126,20 @@ class Memories(_Repo):
                 {"$addFields": {"score": {"$meta": "vectorSearchScore"}}}]
         return [Memory(**d) for d in self._c.aggregate(pipe)]
 
+    def search_scored(self, tenant_id: str, embedding: list[float], k: int = 5):
+        """Like search(), but returns (Memory, vectorSearchScore) pairs."""
+        flt = self._live(tenant_id)
+        pipe = [{"$vectorSearch": {"index": VECTOR_INDEX, "path": "embedding", "queryVector": embedding,
+                                   "numCandidates": 10 * k, "limit": k, "filter": flt}},
+                {"$addFields": {"score": {"$meta": "vectorSearchScore"}}}]
+        return [(Memory(**d), float(d["score"])) for d in self._c.aggregate(pipe)]
+
+    def set_embedding(self, tenant_id: str, id: str, embedding: list[float]) -> None:
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"embedding": embedding}})
+
+    def touch_used(self, tenant_id: str, ids: list[str]) -> None:
+        self._c.update_many(self._q(tenant_id, _id={"$in": ids}), {"$set": {"last_used_at": now()}})
+
     def supersede(self, tenant_id: str, old_id: str, new: Memory) -> str:
         if self.get(tenant_id, old_id) is None:
             raise LookupError("memory not found for this tenant")
@@ -120,8 +148,10 @@ class Memories(_Repo):
         self._c.update_one(self._q(tenant_id, _id=old_id), {"$set": {"status": "superseded"}})
         return new_id
 
-    def expire(self, tenant_id: str, id: str) -> None:
-        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"expires_at": now()}})
+    def expire(self, tenant_id: str, id: str, purge_at=None) -> None:
+        """Excluded from retrieval immediately; with purge_at the TTL index hard-deletes it later."""
+        fields = {"expires_at": now(), **({"purge_at": purge_at} if purge_at else {})}
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": fields})
 
     def forget(self, tenant_id: str, id: str, audit: "AuditEvents") -> None:
         """Delete content, keep a tombstone. The TTL index hard-deletes the shell after PURGE_GRACE."""

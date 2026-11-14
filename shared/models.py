@@ -37,6 +37,8 @@ class User(Doc):
 class Session(Doc):
     thread_id: str
     started_at: datetime = Field(default_factory=now)
+    last_activity_at: datetime = Field(default_factory=now)
+    context_tokens: int = 0         # size of the context pack this session started from (estimate)
     closed_at: Optional[datetime] = None
     summary: Optional[str] = None   # <= 150 tokens
     embedding: Optional[list[float]] = None
@@ -103,6 +105,7 @@ class Order(Doc):
     memories_used: list[str] = []
     quotes_used: list[str] = []
     confirmation_number: Optional[str] = None
+    po_number: Optional[str] = None
     call_id: Optional[str] = None
     tokens: dict[str, int] = {}
     needs_owner_reason: Optional[str] = None

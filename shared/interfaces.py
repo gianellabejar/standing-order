@@ -50,10 +50,13 @@ def parse_owner_text(tenant_id: str, text: str) -> ParsedOrder:
     raise NotImplementedError
 
 
-def build_context_pack(tenant_id: str, session: Session, max_tokens: int = 1500) -> str:
+def build_context_pack(tenant_id: str, session: Session, query: str = "", max_tokens: int = 1500) -> str:
     """Tenant profile + open tasks + top 5 memories (Vector Search via the repo) + last session summary.
-    Drops lowest-score memories first when over the cap. Returns text; token count measured."""
-    raise NotImplementedError
+    Drops lowest-score memories first when over the cap. Returns the text; the token count is logged and stored
+    on the session. Implemented in agent/memory/context_pack.py."""
+    from agent.memory.context_pack import build_context_pack as impl
+    from agent.memory.embed import get_embedder
+    return impl(tenant_id, session, query=query, embedder=get_embedder(), max_tokens=max_tokens).text
 
 
 def choose_supplier(items: list[dict], quotes: list[PriceQuote], memories: list[Memory]) -> Decision:
@@ -96,5 +99,11 @@ def extract_quotes_from_pdf(tenant_id: str, pdf_bytes: bytes, supplier_id: str) 
 
 def close_session(tenant_id: str, session_id: str) -> str:
     """Closes after 30 min silence or task completion. One cheap LLM call: summary (<=150 tokens) and
-    memory candidates; a candidate becomes a Memory only if it has a source. Returns the summary."""
-    raise NotImplementedError
+    memory candidates; a candidate becomes a Memory only if it has a source. Returns the summary.
+    Implemented in agent/sessions/manager.py."""
+    from agent.ledger import Repos
+    from agent.memory.embed import get_embedder
+    from agent.sessions.manager import SessionManager, get_checkpointer, messages_from_checkpoint
+    saver = get_checkpointer()
+    return SessionManager(Repos(), embedder=get_embedder(),
+                          messages_for=lambda t: messages_from_checkpoint(saver, t)).close(tenant_id, session_id)
