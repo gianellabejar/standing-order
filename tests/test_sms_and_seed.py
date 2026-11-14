@@ -1,4 +1,4 @@
-"""SMS webhook + seed. Needs MONGODB_URI (any Atlas or atlas-local); uses database orderdesk_test."""
+"""SMS webhook + seed. Needs MONGODB_URI (any Atlas or atlas-local); uses a fresh orderdesk_test_<random> database per run."""
 import os
 import sys
 import time
@@ -13,7 +13,10 @@ from dotenv import load_dotenv  # noqa: E402
 load_dotenv(ROOT / ".env")
 if not os.environ.get("MONGODB_URI"):
     pytest.skip("MONGODB_URI not set", allow_module_level=True)
-os.environ["MONGODB_DB"] = "orderdesk_test"
+import uuid  # noqa: E402
+
+# A fresh database per run: teammates share the sandbox, so a fixed name lets parallel runs collide.
+os.environ["MONGODB_DB"] = f"orderdesk_test_{uuid.uuid4().hex[:8]}"
 
 from fastapi.testclient import TestClient  # noqa: E402
 
