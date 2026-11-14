@@ -286,3 +286,51 @@ def test_candidate_sourced_from_the_agents_own_message_is_rejected(repos):
     mgr = SessionManager(repos, llm=stub_llm(res), messages_for=lambda t: msgs)
     mgr.close(A, mgr.current(A).id)
     assert [m.text for m in repos.memories.list_active(A)] == ["Owner needs flour regularly."]
+
+
+# ---------- LangGraph thread per session ----------
+def make_threaded_manager(repos, llm, saver):
+    from agent.sessions.manager import messages_from_checkpoint
+    from agent.sessions.thread import build_graph
+    return SessionManager(repos, llm=llm, embedder=FakeEmbedder(), graph=build_graph(saver),
+                          messages_for=lambda t: messages_from_checkpoint(saver, t))
+
+
+def test_turns_flow_through_the_thread_to_the_close_summary_and_never_cross_sessions(repos):
+    from langgraph.checkpoint.memory import InMemorySaver
+    saver = InMemorySaver()
+    seen = []
+    def llm(convo):
+        seen.append(convo)
+        return CloseResult(summary="Owner moved B to Thursdays.", candidates=[
+            Candidate(text="Supplier B delivers on Thursdays.", source_ref="m1"),
+            Candidate(text="Said only by the agent.", source_ref="m2")]), {"prompt": 50, "completion": 20}
+    mgr = make_threaded_manager(repos, llm, saver)
+    t0 = now()
+    s1 = mgr.current(A, t0)
+    mgr.record(A, s1, "owner", "Need flour for Friday", {"type": "sms", "ref": "SM1"})
+    mgr.record(A, s1, "owner", "B now delivers Thursdays", {"type": "sms", "ref": "SM2"})
+    mgr.record(A, s1, "agent", "Noted, Thursdays.")
+    s2 = mgr.current(A, t0 + timedelta(minutes=40))                      # idle: s1 closes, s2 starts
+    assert s2.thread_id != s1.thread_id
+    assert "[m0] owner: Need flour for Friday" in seen[0] and "[m2] agent: Noted, Thursdays." in seen[0]
+    mems = repos.memories.list_active(A)
+    assert [(m.text, m.source.type, m.source.ref) for m in mems] == [("Supplier B delivers on Thursdays.", "sms", "SM2")]
+    assert repos.sessions.get(A, s1.id).summary == "Owner moved B to Thursdays."
+    mgr.record(A, s2, "owner", "different topic entirely", {"type": "sms", "ref": "SM9"})
+    from agent.sessions.manager import messages_from_checkpoint
+    assert [m["text"] for m in messages_from_checkpoint(saver, s2.thread_id)] == ["different topic entirely"]
+    assert len(messages_from_checkpoint(saver, s1.thread_id)) == 3         # old thread untouched
+
+
+def test_supplier_turns_keep_their_role_and_call_source(repos):
+    from langgraph.checkpoint.memory import InMemorySaver
+    from agent.sessions.manager import messages_from_checkpoint
+    saver = InMemorySaver()
+    mgr = make_threaded_manager(repos, stub_llm(CloseResult()), saver)
+    s = mgr.current(A)
+    mgr.record(A, s, "supplier", "Confirmation number is 1234", {"type": "call", "ref": "conv_x"})
+    m = messages_from_checkpoint(saver, s.thread_id)[0]
+    assert (m["role"], m["source"]) == ("supplier", {"type": "call", "ref": "conv_x"})
+    with pytest.raises(ValueError):
+        mgr.record(A, s, "robot", "x")

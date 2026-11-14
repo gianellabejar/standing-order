@@ -101,9 +101,6 @@ def close_session(tenant_id: str, session_id: str) -> str:
     """Closes after 30 min silence or task completion. One cheap LLM call: summary (<=150 tokens) and
     memory candidates; a candidate becomes a Memory only if it has a source. Returns the summary.
     Implemented in agent/sessions/manager.py."""
-    from agent.ledger import Repos
     from agent.memory.embed import get_embedder
-    from agent.sessions.manager import SessionManager, get_checkpointer, messages_from_checkpoint
-    saver = get_checkpointer()
-    return SessionManager(Repos(), embedder=get_embedder(),
-                          messages_for=lambda t: messages_from_checkpoint(saver, t)).close(tenant_id, session_id)
+    from agent.sessions.manager import for_app
+    return for_app(embedder=get_embedder()).close(tenant_id, session_id)
