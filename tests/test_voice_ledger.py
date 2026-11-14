@@ -235,3 +235,25 @@ def test_raw_post_call_payload_is_stored_on_the_call(env):
     order, cid = run_call(repos, prov, "confirmed")
     raw = repos.calls.get_by_conversation(A, cid).raw_post_call
     assert raw["type"] == "post_call_transcription" and raw["data"]["conversation_id"] == cid
+
+
+def test_real_answered_call_terse_number_is_confirmed(env):
+    """fixtures/real_supplier_answered.json: a REAL call (redacted) where a person answered "Yes, it's 1234"
+    after the agent asked for the confirmation number. The call itself ended in a platform error (status failed)."""
+    import json
+    real = json.load(open("fixtures/real_supplier_answered.json"))
+    out = parse_post_call_payload(real)
+    assert real["status"] == "failed" and (out.status, out.confirmation_number) == ("confirmed", "1234")
+    _, repos, prov, _ = env
+    o = planned(repos)
+    cid = ledger.start_call(A, o.id, dict(BRIEF), repos, provider=prov)
+    assert ledger.apply_outcome(A, cid, out, repos).confirmation_number == "1234"
+
+
+def test_number_only_counts_after_agent_asks_and_from_supplier():
+    from agent.voice import find_confirmation_number as f
+    T = lambda r, m: {"role": r, "message": m}
+    assert f([T("agent", "Delivery date?"), T("user", "Tomorrow, 2 pm")]) is None            # not asked
+    assert f([T("agent", "Your confirmation number?"), T("user", "Let me check")]) is None    # no digits
+    assert f([T("agent", "Your confirmation number?"), T("user", "It is MB-48213")]) == "MB-48213"
+    assert f([T("agent", "My confirmation number is AI-123")]) is None                        # agent turn

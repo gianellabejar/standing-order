@@ -1,0 +1,1608 @@
+{
+  "agent_id": "agent_REDACTED",
+  "agent_name": "Order Desk Agent",
+  "conversation_product": "agent",
+  "status": "failed",
+  "user_id": "+1XXXXXXXXXX",
+  "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny",
+  "version_id": "agtvrsn_9701m7dnezadfnyr8kkd7kn1sfv3",
+  "metadata": {
+    "start_time_unix_secs": 1794681490,
+    "accepted_time_unix_secs": 1794681491,
+    "call_duration_secs": 50,
+    "queue_wait_secs": null,
+    "cost": 475,
+    "deletion_settings": {
+      "deletion_time_unix_secs": null,
+      "deleted_logs_at_time_unix_secs": null,
+      "deleted_audio_at_time_unix_secs": null,
+      "deleted_transcript_at_time_unix_secs": null,
+      "delete_transcript_and_pii": false,
+      "delete_audio": false
+    },
+    "feedback": {
+      "type": null,
+      "overall_score": null,
+      "likes": 0,
+      "dislikes": 0,
+      "rating": null,
+      "comment": null
+    },
+    "authorization_method": "signed_url",
+    "charging": {
+      "dev_discount": false,
+      "is_burst": false,
+      "tier": "creator",
+      "llm_usage": {
+        "irreversible_generation": {
+          "model_usage": {
+            "gemini-3.5-flash": {
+              "input": {
+                "tokens": 5618,
+                "price": 0.009269699999999999
+              },
+              "input_cache_read": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "input_cache_write": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "output_total": {
+                "tokens": 140,
+                "price": 0.0013859999999999999
+              }
+            }
+          },
+          "detailed_model_usage": [
+            {
+              "config": {
+                "model": "gemini-3.5-flash",
+                "service_tier": "standard"
+              },
+              "usage": {
+                "input": {
+                  "tokens": 5618,
+                  "price": 0.009269699999999999
+                },
+                "input_cache_read": {
+                  "tokens": 0,
+                  "price": 0.0
+                },
+                "input_cache_write": {
+                  "tokens": 0,
+                  "price": 0.0
+                },
+                "output_total": {
+                  "tokens": 140,
+                  "price": 0.0013859999999999999
+                }
+              }
+            }
+          ]
+        },
+        "initiated_generation": {
+          "model_usage": {
+            "gemini-3.1-flash-lite": {
+              "input": {
+                "tokens": 4614,
+                "price": 0.00126885
+              },
+              "input_cache_read": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "input_cache_write": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "output_total": {
+                "tokens": 584,
+                "price": 0.0009635999999999999
+              }
+            },
+            "gemini-3.5-flash": {
+              "input": {
+                "tokens": 9307,
+                "price": 0.01535655
+              },
+              "input_cache_read": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "input_cache_write": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "output_total": {
+                "tokens": 252,
+                "price": 0.0024948
+              }
+            }
+          },
+          "detailed_model_usage": [
+            {
+              "config": {
+                "model": "gemini-3.1-flash-lite",
+                "service_tier": "standard"
+              },
+              "usage": {
+                "input": {
+                  "tokens": 4614,
+                  "price": 0.00126885
+                },
+                "input_cache_read": {
+                  "tokens": 0,
+                  "price": 0.0
+                },
+                "input_cache_write": {
+                  "tokens": 0,
+                  "price": 0.0
+                },
+                "output_total": {
+                  "tokens": 584,
+                  "price": 0.0009635999999999999
+                }
+              }
+            },
+            {
+              "config": {
+                "model": "gemini-3.5-flash",
+                "service_tier": "standard"
+              },
+              "usage": {
+                "input": {
+                  "tokens": 9307,
+                  "price": 0.01535655
+                },
+                "input_cache_read": {
+                  "tokens": 0,
+                  "price": 0.0
+                },
+                "input_cache_write": {
+                  "tokens": 0,
+                  "price": 0.0
+                },
+                "output_total": {
+                  "tokens": 252,
+                  "price": 0.0024948
+                }
+              }
+            }
+          ]
+        }
+      },
+      "llm_price": 0.020083800000000002,
+      "llm_charge": 110,
+      "call_charge": 365,
+      "platform_charge": 365,
+      "platform_usage": {
+        "category_usage": {
+          "voice": {
+            "credits": 365,
+            "price": 0.06638408720244963,
+            "quantity": 0.8298010900306204
+          }
+        }
+      },
+      "platform_price": 0.06638408720244963,
+      "free_minutes_consumed": 0.0,
+      "free_llm_dollars_consumed": 0.0,
+      "tts_usage": {
+        "primary_tts_model": "eleven_v3_conversational",
+        "total_audio_output_seconds": 58.774000000000036,
+        "total_characters": 1188,
+        "per_voice_usage": [
+          {
+            "voice_id": "56bWURjYFHyYyVf490Dp",
+            "audio_output_seconds": 58.774000000000036
+          }
+        ]
+      },
+      "asr_usage": {
+        "asr_model": "scribe_realtime",
+        "total_transcription_calls": 92,
+        "total_audio_input_seconds": 17.20000000000001
+      },
+      "analysis": null,
+      "subagent_charge": 0,
+      "voice_surcharge_charge": null,
+      "user_memory": null
+    },
+    "phone_call": {
+      "direction": "outbound",
+      "phone_number_id": "phnum_REDACTED",
+      "agent_number": "+1XXXXXXXXXX",
+      "external_number": "+1XXXXXXXXXX",
+      "call_result": "answered",
+      "type": "twilio",
+      "stream_sid": "MZ68a931708e0d0bf78a02e62b2433c85d",
+      "call_sid": "CA_REDACTED"
+    },
+    "batch_call": null,
+    "termination_reason": "The AI agent you are trying to reach appears to be having technical issues.",
+    "error": {
+      "code": 1002,
+      "reason": "The AI agent you are trying to reach appears to be having technical issues.",
+      "error_type": "dependency_error"
+    },
+    "warnings": [],
+    "main_language": "en",
+    "rag_usage": null,
+    "text_only": false,
+    "features_usage": {
+      "language_detection": {
+        "enabled": true,
+        "used": false
+      },
+      "transfer_to_agent": {
+        "enabled": false,
+        "used": false
+      },
+      "transfer_to_number": {
+        "enabled": false,
+        "used": false
+      },
+      "multivoice": {
+        "enabled": false,
+        "used": false
+      },
+      "dtmf_tones": {
+        "enabled": false,
+        "used": false
+      },
+      "external_mcp_servers": {
+        "enabled": false,
+        "used": false
+      },
+      "pii_zrm_workspace": false,
+      "pii_zrm_agent": false,
+      "tool_dynamic_variable_updates": {
+        "enabled": false,
+        "used": false
+      },
+      "is_livekit": false,
+      "voicemail_detection": {
+        "enabled": true,
+        "used": false
+      },
+      "dtmf_input": {
+        "enabled": false,
+        "used": false
+      },
+      "workflow": {
+        "enabled": true,
+        "version": 1,
+        "tool_node": {
+          "enabled": false,
+          "used": false
+        },
+        "standalone_agent_node": {
+          "enabled": false,
+          "used": false
+        },
+        "phone_number_node": {
+          "enabled": false,
+          "used": false
+        },
+        "end_node": {
+          "enabled": true,
+          "used": false
+        },
+        "override_agent_node": {
+          "enabled": true,
+          "used": true
+        },
+        "say_node": {
+          "enabled": false,
+          "used": false
+        },
+        "update_state_node": {
+          "enabled": false,
+          "used": false
+        },
+        "subgraph_node": {
+          "enabled": false,
+          "used": false
+        },
+        "transfer_to_genesys_node": {
+          "enabled": false,
+          "used": false
+        },
+        "start_procedure_node": {
+          "enabled": false,
+          "used": false
+        }
+      },
+      "agent_testing": {
+        "enabled": true,
+        "tests_ran_after_last_modification": false,
+        "tests_ran_in_last_7_days": false
+      },
+      "versioning": {
+        "enabled": true,
+        "used": false
+      },
+      "file_input": {
+        "enabled": true,
+        "used": false
+      },
+      "freeform_procedure": {
+        "enabled": false,
+        "used": false
+      },
+      "structured_procedure": {
+        "enabled": false,
+        "used": false
+      }
+    },
+    "eleven_assistant": {
+      "is_eleven_assistant": false
+    },
+    "initiator_id": null,
+    "conversation_initiation_source": "twilio",
+    "conversation_initiation_source_version": null,
+    "timezone": null,
+    "async_metadata": null,
+    "whatsapp": null,
+    "sms": null,
+    "agent_created_from": "template",
+    "agent_last_updated_from": "api",
+    "stream_state": null,
+    "voice_rewards": [
+      {
+        "voice_id": "56bWURjYFHyYyVf490Dp",
+        "reward_usd_cents": 0.6474757563636369
+      }
+    ],
+    "avatar_sessions": [],
+    "cost_fiat": 0.08646788720244963
+  },
+  "analysis": {
+    "evaluation_criteria_results": {},
+    "data_collection_results": {},
+    "evaluation_criteria_results_list": [],
+    "data_collection_results_list": [],
+    "call_successful": "failure",
+    "call_success_score": 0.0,
+    "transcript_summary": "An AI assistant, calling on behalf of Maple Bakery, contacted Dave to place an order for one bag of all-purpose flour at $3.20, with PO number TEST0002. After initial communication issues, Dave confirmed the order, stating delivery would be tomorrow. The agent then requested and received the order confirmation number, 1234, before the call was transferred to an agent.",
+    "call_summary_title": "Place Bakery Order",
+    "scoped": [],
+    "sentiment_analysis": {
+      "overall_label": "neutral",
+      "overall_sentiment_score": 0.0,
+      "overall_frustration_score": 0.2,
+      "min_user_sentiment_score": -0.1,
+      "max_user_frustration_score": 0.2,
+      "num_scored_user_turns": 3
+    },
+    "not_applicable": []
+  },
+  "user_message_count": 6,
+  "agent_message_count": 6,
+  "visited_agents": [
+    {
+      "agent_id": "agent_REDACTED",
+      "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny"
+    }
+  ],
+  "conversation_initiation_client_data": {
+    "conversation_config_override": {
+      "asr": null,
+      "turn": null,
+      "tts": null,
+      "conversation": null,
+      "agent": null
+    },
+    "custom_llm_extra_body": {},
+    "user_id": null,
+    "source_info": {
+      "source": null,
+      "version": null
+    },
+    "branch_id": null,
+    "environment": null,
+    "starting_workflow_node_id": null,
+    "experiments": [],
+    "procedure_ids": null,
+    "start_procedure_ids": null,
+    "dynamic_variables": {
+      "shop_name": "Maple Bakery",
+      "contact_name": "Dave",
+      "item": "all-purpose flour",
+      "quantity": 1,
+      "unit": "bag",
+      "price": 3.2,
+      "po_number": "TEST-0002",
+      "tenant_id": "maple",
+      "order_id": "1bf41f96d4434efca15beede72f95dd7",
+      "system__agent_id": "agent_REDACTED",
+      "system__agent_turns": 6,
+      "system__current_agent_turns": 6,
+      "system__current_subagent_turns": 0,
+      "system__current_agent_id": "agent_REDACTED",
+      "system__conversation_id": "conv_REDACTED",
+      "system__call_duration_secs": 49,
+      "system__time_utc": "2026-11-14T18:39:00.777737+00:00",
+      "system__timezone": null,
+      "system__time": "Saturday, 18:39 14 November 2026",
+      "system__time_date": "Saturday, 14 November 2026",
+      "system__time_hour": 18,
+      "system__time_minute": 39,
+      "system__time_second": 0,
+      "system__is_text_only": false,
+      "system__channel": "twilio",
+      "system__caller_id": "+1XXXXXXXXXX",
+      "system__guardrail_synthetic_voice": false,
+      "system__guardrail_human_voice": false,
+      "system__called_number": "+1XXXXXXXXXX",
+      "system__call_sid": "CA_REDACTED",
+      "system__call_id": null,
+      "system__conversation_history": "{\"x-elevenlabs-history\": true, \"entries\": [{\"role\": \"agent\", \"message\": \"Hi, this is an AI assistant calling on behalf of Maple Bakery to place an order. This call is transcribed. Is this Dave?\"}, {\"role\": \"user\", \"message\": \"Yes.\"}, {\"role\": \"agent\", \"message\": \"[Friendly] Great, hello Dave. I would like to place an order for one bag of...\"}, {\"role\": \"user\", \"message\": \"Yes.\"}, {\"role\": \"agent\", \"message\": \"[Friendly] Great, hello Dave. I would like to place an order for ...\"}, {\"role\": \"user\", \"message\": \"Yes.\"}, {\"role\": \"agent\", \"message\": \"[Friendly] I would like to place an order for...\"}, {\"role\": \"user\", \"message\": \"Hello?\"}, {\"role\": \"agent\", \"message\": \"[Friendly] Hello, can you hear me? I would like to place an order for one bag of all purpose flour at the agreed price of three point two dollars. The purchase order number is T E S T zero zero zero two. Can you confirm this order and let me know the delivery date?\"}, {\"role\": \"user\", \"message\": \"Yes, it'll be tomorrow.\"}, {\"role\": \"agent\", \"message\": \"[Helpful] Tomorrow is perfect, thank you. Could you please provide your order confirmation number for this purchase?\"}, {\"role\": \"user\", \"message\": \"Yes, it's 1234.\"}, {\"role\": \"agent\", \"tool_requests\": [{\"tool_name\": \"notify_condition_1_met\", \"params_as_json\": {}}]}, {\"role\": \"agent\", \"tool_results\": [{\"tool_name\": \"notify_condition_1_met\", \"result_value\": \"{\\\"steps\\\":[{\\\"step_latency_secs\\\":0.00008281972259283066,\\\"type\\\":\\\"edge\\\",\\\"edge_id\\\":\\\"g2a\\\",\\\"target_node_id\\\":\\\"assess\\\"},{\\\"step_latency_secs\\\":0.006331210024654865,\\\"type\\\":\\\"nested_tools\\\",\\\"node_id\\\":\\\"assess\\\",\\\"requests\\\":[{\\\"type\\\":\\\"system\\\",\\\"request_id\\\":\\\"tlcal_6701m7dnp403fhbbej2z6r9r89n8\\\",\\\"tool_name\\\":\\\"transfer_to_agent\\\",\\\"tool_id\\\":\\\"__system_transfer_to_agent\\\",\\\"params_as_json\\\":\\\"{\\\\\\\"reason\\\\\\\": \\\\\\\"Transferring to agent as part of a workflow route.\\\\\\\", \\\\\\\"agent_number\\\\\\\": 0, \\\\\\\"agent_id\\\\\\\": \\\\\\\"agent_REDACTED\\\\\\\"}\\\",\\\"tool_has_been_called\\\":true,\\\"tool_details\\\":null}],\\\"results\\\":[{\\\"request_id\\\":\\\"tlcal_6701m7dnp403fhbbej2z6r9r89n8\\\",\\\"tool_name\\\":\\\"transfer_to_agent\\\",\\\"tool_id\\\":\\\"__system_transfer_to_agent\\\",\\\"result_value\\\":\\\"{\\\\\\\"result_type\\\\\\\":\\\\\\\"transfer_to_agent_success\\\\\\\",\\\\\\\"status\\\\\\\":\\\\\\\"success\\\\\\\",\\\\\\\"from_agent\\\\\\\":\\\\\\\"agent_REDACTED\\\\\\\",\\\\\\\"to_agent\\\\\\\":\\\\\\\"agent_REDACTED\\\\\\\",\\\\\\\"to_node\\\\\\\":\\\\\\\"assess\\\\\\\",\\\\\\\"condition\\\\\\\":\\\\\\\"\\\\\\\",\\\\\\\"delay_ms\\\\\\\":0,\\\\\\\"transfer_message\\\\\\\":null,\\\\\\\"enable_transferred_agent_first_message\\\\\\\":false,\\\\\\\"branch_info\\\\\\\":null,\\\\\\\"preserve_client_tts_overrides\\\\\\\":false,\\\\\\\"preserve_voice_settings\\\\\\\":false,\\\\\\\"transfer_op\\\\\\\":{\\\\\\\"type\\\\\\\":\\\\\\\"replace\\\\\\\"}}\\\",\\\"is_error\\\":false,\\\"is_blocked\\\":false,\\\"tool_has_been_called\\\":true,\\\"tool_latency_secs\\\":0.0007460396736860275,\\\"error_type\\\":\\\"\\\",\\\"raw_error_message\\\":\\\"\\\",\\\"dynamic_variable_updates\\\":[],\\\"type\\\":\\\"system\\\",\\\"result\\\":{\\\"result_type\\\":\\\"transfer_to_agent_success\\\",\\\"status\\\":\\\"success\\\",\\\"from_agent\\\":\\\"agent_REDACTED\\\",\\\"to_agent\\\":\\\"agent_REDACTED\\\",\\\"to_node\\\":\\\"assess\\\",\\\"condition\\\":\\\"\\\",\\\"delay_ms\\\":0,\\\"transfer_message\\\":null,\\\"enable_transferred_agent_first_message\\\":false,\\\"branch_info\\\":null,\\\"preserve_client_tts_overrides\\\":false,\\\"preserve_voice_settings\\\":false,\\\"transfer_op\\\":{\\\"type\\\":\\\"replace\\\"}}}],\\\"is_successful\\\":true}]}\"}]}]}",
+      "system__user_id": "+1XXXXXXXXXX",
+      "system__initiator_id": null,
+      "system__environment": "production",
+      "system__agents_user_id": null,
+      "system__user_verification_level": null,
+      "system__uploaded_file_ids": []
+    },
+    "tool_mock_config": {
+      "mocking_strategy": "none",
+      "fallback_strategy": "raise_error",
+      "mocked_tool_names": []
+    },
+    "tool_mock_overrides": {}
+  },
+  "environment": "production",
+  "experiment_assignments": null,
+  "hiding_reason": null,
+  "smb_metadata": null,
+  "conversation_id": "conv_REDACTED",
+  "has_audio": true,
+  "has_user_audio": true,
+  "has_response_audio": true,
+  "has_auxiliary_audio": false,
+  "transcript": [
+    {
+      "role": "agent",
+      "agent_metadata": {
+        "agent_id": "agent_REDACTED",
+        "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny",
+        "workflow_node_id": "greeting",
+        "version_id": "agtvrsn_9701m7dnezadfnyr8kkd7kn1sfv3"
+      },
+      "message": "Hi, this is an AI assistant calling on behalf of Maple Bakery to place an order. This call is transcribed. Is this Dave?",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": "gemini-3.5-flash",
+      "time_in_call_secs": 0,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.139522397890687
+          },
+          "convai_ttf_audio_since_silence": {
+            "elapsed_time": 0.1424724981188774
+          },
+          "convai_turn_silence_before_initiation": {
+            "elapsed_time": 0.0
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": "eleven_v3_conversational",
+        "convai_tts_cascade": null,
+        "voice_id": "56bWURjYFHyYyVf490Dp"
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": null,
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [],
+      "source_medium": null,
+      "source_event_id": 1,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    },
+    {
+      "role": "user",
+      "agent_metadata": null,
+      "message": "Yes.",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": null,
+      "time_in_call_secs": 8,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_asr_trailing_service_latency": {
+            "elapsed_time": 0.07697632815688848
+          }
+        },
+        "convai_asr_provider": "Scribe v2 Realtime",
+        "convai_tts_model": null,
+        "convai_tts_cascade": null,
+        "voice_id": null
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": null,
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [],
+      "source_medium": "audio",
+      "source_event_id": 59,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    },
+    {
+      "role": "agent",
+      "agent_metadata": {
+        "agent_id": "agent_REDACTED",
+        "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny",
+        "workflow_node_id": "greeting",
+        "version_id": "agtvrsn_9701m7dnezadfnyr8kkd7kn1sfv3"
+      },
+      "message": "[Friendly] Great, hello Dave. I would like to place an order for one bag of...",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": "gemini-3.5-flash",
+      "time_in_call_secs": 10,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.7135815192013979
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.7132056197151542
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.9458324667066336
+          },
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.18247388675808907
+          },
+          "convai_ttf_audio_since_silence": {
+            "elapsed_time": 1.2551486435756087
+          },
+          "convai_turn_silence_before_initiation": {
+            "elapsed_time": 0.256
+          },
+          "convai_turn_asr_latency": {
+            "elapsed_time": 0.07697632815688848
+          },
+          "convai_turn_asr_excess": {
+            "elapsed_time": 0.07697632815688848
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": "eleven_v3_conversational",
+        "convai_tts_cascade": null,
+        "voice_id": "56bWURjYFHyYyVf490Dp"
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": {
+        "model_usage": {
+          "gemini-3.5-flash": {
+            "input": {
+              "tokens": 1813,
+              "price": 0.0029914499999999997
+            },
+            "input_cache_read": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "input_cache_write": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "output_total": {
+              "tokens": 56,
+              "price": 0.0005543999999999999
+            }
+          }
+        },
+        "detailed_model_usage": [
+          {
+            "config": {
+              "model": "gemini-3.5-flash",
+              "service_tier": "standard"
+            },
+            "usage": {
+              "input": {
+                "tokens": 1813,
+                "price": 0.0029914499999999997
+              },
+              "input_cache_read": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "input_cache_write": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "output_total": {
+                "tokens": 56,
+                "price": 0.0005543999999999999
+              }
+            }
+          }
+        ]
+      },
+      "interrupted": true,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": "[Friendly] Great, hello Dave. I would like to place an order for one bag of all-purpose flour at our agreed price of three point two dollars. The purchase order number is T E S T zero zero zero two. Can you confirm if you have this available?",
+      "reasoning": [
+        {
+          "summary": null,
+          "provider_redact": false,
+          "type": "reasoning"
+        }
+      ],
+      "source_medium": null,
+      "source_event_id": 59,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": true
+    },
+    {
+      "role": "user",
+      "agent_metadata": null,
+      "message": "Yes.",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": null,
+      "time_in_call_secs": 12,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_asr_trailing_service_latency": {
+            "elapsed_time": 0.05275606922805309
+          }
+        },
+        "convai_asr_provider": "Scribe v2 Realtime",
+        "convai_tts_model": null,
+        "convai_tts_cascade": null,
+        "voice_id": null
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": null,
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [],
+      "source_medium": "audio",
+      "source_event_id": 88,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    },
+    {
+      "role": "agent",
+      "agent_metadata": {
+        "agent_id": "agent_REDACTED",
+        "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny",
+        "workflow_node_id": "greeting",
+        "version_id": "agtvrsn_9701m7dnezadfnyr8kkd7kn1sfv3"
+      },
+      "message": "[Friendly] Great, hello Dave. I would like to place an order for ...",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": "gemini-3.5-flash",
+      "time_in_call_secs": 14,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.6103691514581442
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.6100640511140227
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.8797028763219714
+          },
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.16557668708264828
+          },
+          "convai_ttf_audio_since_silence": {
+            "elapsed_time": 1.0402618378475308
+          },
+          "convai_turn_silence_before_initiation": {
+            "elapsed_time": 0.192
+          },
+          "convai_turn_asr_latency": {
+            "elapsed_time": 0.05275606922805309
+          },
+          "convai_turn_asr_excess": {
+            "elapsed_time": 0.05275606922805309
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": "eleven_v3_conversational",
+        "convai_tts_cascade": null,
+        "voice_id": "56bWURjYFHyYyVf490Dp"
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": {
+        "model_usage": {
+          "gemini-3.5-flash": {
+            "input": {
+              "tokens": 1835,
+              "price": 0.00302775
+            },
+            "input_cache_read": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "input_cache_write": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "output_total": {
+              "tokens": 59,
+              "price": 0.0005841
+            }
+          }
+        },
+        "detailed_model_usage": [
+          {
+            "config": {
+              "model": "gemini-3.5-flash",
+              "service_tier": "standard"
+            },
+            "usage": {
+              "input": {
+                "tokens": 1835,
+                "price": 0.00302775
+              },
+              "input_cache_read": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "input_cache_write": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "output_total": {
+                "tokens": 59,
+                "price": 0.0005841
+              }
+            }
+          }
+        ]
+      },
+      "interrupted": true,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": "[Friendly] Great, hello Dave. I would like to place an order for one bag of all-purpose flour at the agreed price of three point two dollars, using purchase order number T E S T zero zero zero two. Can you confirm this order and let me know the delivery date?",
+      "reasoning": [],
+      "source_medium": null,
+      "source_event_id": 88,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    },
+    {
+      "role": "user",
+      "agent_metadata": null,
+      "message": "Yes.",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": null,
+      "time_in_call_secs": 16,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_asr_trailing_service_latency": {
+            "elapsed_time": 0.06460295896977186
+          }
+        },
+        "convai_asr_provider": "Scribe v2 Realtime",
+        "convai_tts_model": null,
+        "convai_tts_cascade": null,
+        "voice_id": null
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": null,
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [],
+      "source_medium": "audio",
+      "source_event_id": 110,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    },
+    {
+      "role": "agent",
+      "agent_metadata": {
+        "agent_id": "agent_REDACTED",
+        "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny",
+        "workflow_node_id": "greeting",
+        "version_id": "agtvrsn_9701m7dnezadfnyr8kkd7kn1sfv3"
+      },
+      "message": "[Friendly] I would like to place an order for...",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": "gemini-3.5-flash",
+      "time_in_call_secs": 18,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.5749758705496788
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.5746308611705899
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.7679554978385568
+          },
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.2073435066267848
+          },
+          "convai_ttf_audio_since_silence": {
+            "elapsed_time": 1.2206237363144754
+          },
+          "convai_turn_silence_before_initiation": {
+            "elapsed_time": 0.352
+          },
+          "convai_turn_asr_latency": {
+            "elapsed_time": 0.06460295896977186
+          },
+          "convai_turn_asr_excess": {
+            "elapsed_time": 0.06460295896977186
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": "eleven_v3_conversational",
+        "convai_tts_cascade": null,
+        "voice_id": "56bWURjYFHyYyVf490Dp"
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": {
+        "model_usage": {
+          "gemini-3.5-flash": {
+            "input": {
+              "tokens": 1854,
+              "price": 0.0030591
+            },
+            "input_cache_read": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "input_cache_write": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "output_total": {
+              "tokens": 53,
+              "price": 0.0005247
+            }
+          }
+        },
+        "detailed_model_usage": [
+          {
+            "config": {
+              "model": "gemini-3.5-flash",
+              "service_tier": "standard"
+            },
+            "usage": {
+              "input": {
+                "tokens": 1854,
+                "price": 0.0030591
+              },
+              "input_cache_read": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "input_cache_write": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "output_total": {
+                "tokens": 53,
+                "price": 0.0005247
+              }
+            }
+          }
+        ]
+      },
+      "interrupted": true,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": "[Friendly] I would like to place an order for one bag of all-purpose flour at the agreed price of three dollars and twenty cents. The purchase order number is T E S T zero zero zero two.",
+      "reasoning": [],
+      "source_medium": null,
+      "source_event_id": 110,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    },
+    {
+      "role": "user",
+      "agent_metadata": null,
+      "message": "Hello?",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": null,
+      "time_in_call_secs": 18,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_asr_trailing_service_latency": {
+            "elapsed_time": 0.045826748944818974
+          }
+        },
+        "convai_asr_provider": "Scribe v2 Realtime",
+        "convai_tts_model": null,
+        "convai_tts_cascade": null,
+        "voice_id": null
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": null,
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [],
+      "source_medium": "audio",
+      "source_event_id": 125,
+      "used_static_kb_document_ids": [],
+      "analysis": {
+        "user_sentiment_score": -0.1,
+        "user_frustration_score": 0.2
+      },
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    },
+    {
+      "role": "agent",
+      "agent_metadata": {
+        "agent_id": "agent_REDACTED",
+        "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny",
+        "workflow_node_id": "greeting",
+        "version_id": "agtvrsn_9701m7dnezadfnyr8kkd7kn1sfv3"
+      },
+      "message": "[Friendly] Hello, can you hear me? I would like to place an order for one bag of all purpose flour at the agreed price of three point two dollars. The purchase order number is T E S T zero zero zero two. Can you confirm this order and let me know the delivery date?",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": "gemini-3.5-flash",
+      "time_in_call_secs": 20,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.7447152687236667
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.7443550983443856
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.9926790343597531
+          },
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.2286114664748311
+          },
+          "convai_ttf_audio_since_silence": {
+            "elapsed_time": 1.3600304635986686
+          },
+          "convai_turn_silence_before_initiation": {
+            "elapsed_time": 0.32
+          },
+          "convai_turn_asr_latency": {
+            "elapsed_time": 0.045826748944818974
+          },
+          "convai_turn_asr_excess": {
+            "elapsed_time": 0.045826748944818974
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": "eleven_v3_conversational",
+        "convai_tts_cascade": null,
+        "voice_id": "56bWURjYFHyYyVf490Dp"
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": {
+        "model_usage": {
+          "gemini-3.5-flash": {
+            "input": {
+              "tokens": 1868,
+              "price": 0.0030822
+            },
+            "input_cache_read": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "input_cache_write": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "output_total": {
+              "tokens": 61,
+              "price": 0.0006039
+            }
+          }
+        },
+        "detailed_model_usage": [
+          {
+            "config": {
+              "model": "gemini-3.5-flash",
+              "service_tier": "standard"
+            },
+            "usage": {
+              "input": {
+                "tokens": 1868,
+                "price": 0.0030822
+              },
+              "input_cache_read": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "input_cache_write": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "output_total": {
+                "tokens": 61,
+                "price": 0.0006039
+              }
+            }
+          }
+        ]
+      },
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [
+        {
+          "summary": null,
+          "provider_redact": false,
+          "type": "reasoning"
+        }
+      ],
+      "source_medium": null,
+      "source_event_id": 125,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": true
+    },
+    {
+      "role": "user",
+      "agent_metadata": null,
+      "message": "Yes, it'll be tomorrow.",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": null,
+      "time_in_call_secs": 37,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_asr_trailing_service_latency": {
+            "elapsed_time": 0.051647708751261234
+          }
+        },
+        "convai_asr_provider": "Scribe v2 Realtime",
+        "convai_tts_model": null,
+        "convai_tts_cascade": null,
+        "voice_id": null
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": null,
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [],
+      "source_medium": "audio",
+      "source_event_id": 246,
+      "used_static_kb_document_ids": [],
+      "analysis": {
+        "user_sentiment_score": 0.0,
+        "user_frustration_score": 0.0
+      },
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    },
+    {
+      "role": "agent",
+      "agent_metadata": {
+        "agent_id": "agent_REDACTED",
+        "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny",
+        "workflow_node_id": "greeting",
+        "version_id": "agtvrsn_9701m7dnezadfnyr8kkd7kn1sfv3"
+      },
+      "message": "[Helpful] Tomorrow is perfect, thank you. Could you please provide your order confirmation number for this purchase?",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": "gemini-3.5-flash",
+      "time_in_call_secs": 40,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.5960152009502053
+          },
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.5956742512062192
+          },
+          "convai_llm_service_tt_last_sentence": {
+            "elapsed_time": 0.6715658605098724
+          },
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.15309397876262665
+          },
+          "convai_ttf_audio_since_silence": {
+            "elapsed_time": 1.079566248640418
+          },
+          "convai_turn_silence_before_initiation": {
+            "elapsed_time": 0.256
+          },
+          "convai_turn_asr_latency": {
+            "elapsed_time": 0.051647708751261234
+          },
+          "convai_turn_asr_excess": {
+            "elapsed_time": 0.051647708751261234
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": "eleven_v3_conversational",
+        "convai_tts_cascade": null,
+        "voice_id": "56bWURjYFHyYyVf490Dp"
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": {
+        "model_usage": {
+          "gemini-3.5-flash": {
+            "input": {
+              "tokens": 1937,
+              "price": 0.0031960499999999998
+            },
+            "input_cache_read": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "input_cache_write": {
+              "tokens": 0,
+              "price": 0.0
+            },
+            "output_total": {
+              "tokens": 23,
+              "price": 0.0002277
+            }
+          }
+        },
+        "detailed_model_usage": [
+          {
+            "config": {
+              "model": "gemini-3.5-flash",
+              "service_tier": "standard"
+            },
+            "usage": {
+              "input": {
+                "tokens": 1937,
+                "price": 0.0031960499999999998
+              },
+              "input_cache_read": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "input_cache_write": {
+                "tokens": 0,
+                "price": 0.0
+              },
+              "output_total": {
+                "tokens": 23,
+                "price": 0.0002277
+              }
+            }
+          }
+        ]
+      },
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [
+        {
+          "summary": null,
+          "provider_redact": false,
+          "type": "reasoning"
+        }
+      ],
+      "source_medium": null,
+      "source_event_id": 246,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": true
+    },
+    {
+      "role": "user",
+      "agent_metadata": null,
+      "message": "Yes, it's 1234.",
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": null,
+      "time_in_call_secs": 45,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_asr_trailing_service_latency": {
+            "elapsed_time": 0.04913224931806326
+          }
+        },
+        "convai_asr_provider": "Scribe v2 Realtime",
+        "convai_tts_model": null,
+        "convai_tts_cascade": null,
+        "voice_id": null
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": null,
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [],
+      "source_medium": "audio",
+      "source_event_id": 307,
+      "used_static_kb_document_ids": [],
+      "analysis": {
+        "user_sentiment_score": 0.0,
+        "user_frustration_score": 0.0
+      },
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    },
+    {
+      "role": "agent",
+      "agent_metadata": {
+        "agent_id": "agent_REDACTED",
+        "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny",
+        "workflow_node_id": "greeting",
+        "version_id": "agtvrsn_9701m7dnezadfnyr8kkd7kn1sfv3"
+      },
+      "message": null,
+      "multivoice_message": null,
+      "tool_calls": [
+        {
+          "type": "workflow",
+          "request_id": "notify_condition_1_met_64663a56046f493bad44d179b5d54a31",
+          "tool_name": "notify_condition_1_met",
+          "tool_id": null,
+          "params_as_json": "{}",
+          "tool_has_been_called": true,
+          "tool_details": null
+        }
+      ],
+      "tool_results": [],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": "gemini-3.5-flash",
+      "time_in_call_secs": 49,
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttfb": {
+            "elapsed_time": 0.6242241999134421
+          },
+          "convai_llm_tool_request_generation_latency": {
+            "elapsed_time": 0.6246965602040291
+          }
+        },
+        "convai_asr_provider": null,
+        "convai_tts_model": null,
+        "convai_tts_cascade": null,
+        "voice_id": null
+      },
+      "rag_retrieval_info": null,
+      "llm_usage": null,
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [],
+      "source_medium": null,
+      "source_event_id": 307,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": true
+    },
+    {
+      "role": "agent",
+      "agent_metadata": {
+        "agent_id": "agent_REDACTED",
+        "branch_id": "agtbrch_0001m7de1ve0fw49y4csxah6e3ny",
+        "workflow_node_id": "greeting",
+        "version_id": "agtvrsn_9701m7dnezadfnyr8kkd7kn1sfv3"
+      },
+      "message": null,
+      "multivoice_message": null,
+      "tool_calls": [],
+      "tool_results": [
+        {
+          "request_id": "notify_condition_1_met_64663a56046f493bad44d179b5d54a31",
+          "tool_name": "notify_condition_1_met",
+          "tool_id": null,
+          "result_value": "{\"steps\":[{\"step_latency_secs\":0.00008281972259283066,\"type\":\"edge\",\"edge_id\":\"g2a\",\"target_node_id\":\"assess\"},{\"step_latency_secs\":0.006331210024654865,\"type\":\"nested_tools\",\"node_id\":\"assess\",\"requests\":[{\"type\":\"system\",\"request_id\":\"tlcal_6701m7dnp403fhbbej2z6r9r89n8\",\"tool_name\":\"transfer_to_agent\",\"tool_id\":\"__system_transfer_to_agent\",\"params_as_json\":\"{\\\"reason\\\": \\\"Transferring to agent as part of a workflow route.\\\", \\\"agent_number\\\": 0, \\\"agent_id\\\": \\\"agent_REDACTED\\\"}\",\"tool_has_been_called\":true,\"tool_details\":null}],\"results\":[{\"request_id\":\"tlcal_6701m7dnp403fhbbej2z6r9r89n8\",\"tool_name\":\"transfer_to_agent\",\"tool_id\":\"__system_transfer_to_agent\",\"result_value\":\"{\\\"result_type\\\":\\\"transfer_to_agent_success\\\",\\\"status\\\":\\\"success\\\",\\\"from_agent\\\":\\\"agent_REDACTED\\\",\\\"to_agent\\\":\\\"agent_REDACTED\\\",\\\"to_node\\\":\\\"assess\\\",\\\"condition\\\":\\\"\\\",\\\"delay_ms\\\":0,\\\"transfer_message\\\":null,\\\"enable_transferred_agent_first_message\\\":false,\\\"branch_info\\\":null,\\\"preserve_client_tts_overrides\\\":false,\\\"preserve_voice_settings\\\":false,\\\"transfer_op\\\":{\\\"type\\\":\\\"replace\\\"}}\",\"is_error\":false,\"is_blocked\":false,\"tool_has_been_called\":true,\"tool_latency_secs\":0.0007460396736860275,\"error_type\":\"\",\"raw_error_message\":\"\",\"dynamic_variable_updates\":[],\"type\":\"system\",\"result\":{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_REDACTED\",\"to_agent\":\"agent_REDACTED\",\"to_node\":\"assess\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null,\"preserve_client_tts_overrides\":false,\"preserve_voice_settings\":false,\"transfer_op\":{\"type\":\"replace\"}}}],\"is_successful\":true}]}",
+          "is_error": false,
+          "is_blocked": false,
+          "tool_has_been_called": true,
+          "tool_latency_secs": 0.00670109037309885,
+          "error_type": "",
+          "raw_error_message": "",
+          "dynamic_variable_updates": [],
+          "type": "workflow",
+          "result": {
+            "steps": [
+              {
+                "step_latency_secs": 8.281972259283066e-05,
+                "type": "edge",
+                "edge_id": "g2a",
+                "target_node_id": "assess"
+              },
+              {
+                "step_latency_secs": 0.006331210024654865,
+                "type": "nested_tools",
+                "node_id": "assess",
+                "requests": [
+                  {
+                    "type": "system",
+                    "request_id": "tlcal_6701m7dnp403fhbbej2z6r9r89n8",
+                    "tool_name": "transfer_to_agent",
+                    "tool_id": "__system_transfer_to_agent",
+                    "params_as_json": "{\"reason\": \"Transferring to agent as part of a workflow route.\", \"agent_number\": 0, \"agent_id\": \"agent_REDACTED\"}",
+                    "tool_has_been_called": true,
+                    "tool_details": null
+                  }
+                ],
+                "results": [
+                  {
+                    "request_id": "tlcal_6701m7dnp403fhbbej2z6r9r89n8",
+                    "tool_name": "transfer_to_agent",
+                    "tool_id": "__system_transfer_to_agent",
+                    "result_value": "{\"result_type\":\"transfer_to_agent_success\",\"status\":\"success\",\"from_agent\":\"agent_REDACTED\",\"to_agent\":\"agent_REDACTED\",\"to_node\":\"assess\",\"condition\":\"\",\"delay_ms\":0,\"transfer_message\":null,\"enable_transferred_agent_first_message\":false,\"branch_info\":null,\"preserve_client_tts_overrides\":false,\"preserve_voice_settings\":false,\"transfer_op\":{\"type\":\"replace\"}}",
+                    "is_error": false,
+                    "is_blocked": false,
+                    "tool_has_been_called": true,
+                    "tool_latency_secs": 0.0007460396736860275,
+                    "error_type": "",
+                    "raw_error_message": "",
+                    "dynamic_variable_updates": [],
+                    "type": "system",
+                    "result": {
+                      "result_type": "transfer_to_agent_success",
+                      "status": "success",
+                      "from_agent": "agent_REDACTED",
+                      "to_agent": "agent_REDACTED",
+                      "to_node": "assess",
+                      "condition": "",
+                      "delay_ms": 0,
+                      "transfer_message": null,
+                      "enable_transferred_agent_first_message": false,
+                      "branch_info": null,
+                      "preserve_client_tts_overrides": false,
+                      "preserve_voice_settings": false,
+                      "transfer_op": {
+                        "type": "replace"
+                      }
+                    }
+                  }
+                ],
+                "is_successful": true
+              }
+            ]
+          }
+        }
+      ],
+      "feedback": null,
+      "llm_override": null,
+      "producing_llm": null,
+      "time_in_call_secs": 49,
+      "conversation_turn_metrics": null,
+      "rag_retrieval_info": null,
+      "llm_usage": null,
+      "interrupted": false,
+      "ignored_as_backchannel": false,
+      "platform_event": null,
+      "original_message": null,
+      "reasoning": [],
+      "source_medium": null,
+      "source_event_id": 307,
+      "used_static_kb_document_ids": [],
+      "analysis": null,
+      "user_identifier": null,
+      "id": null,
+      "created_at_unix_ms": null,
+      "compaction": null,
+      "triggered_guardrails": [],
+      "workflow_goal": null,
+      "file_input": null,
+      "file_inputs": [],
+      "contextual_update_info": null,
+      "config_snapshot_id": null,
+      "origin": null,
+      "reasoned": false
+    }
+  ],
+  "tag_ids": [],
+  "realtime_config_snapshots": null,
+  "orchestrator": "conversational",
+  "realtime_context": null,
+  "otlp_traces": null
+}

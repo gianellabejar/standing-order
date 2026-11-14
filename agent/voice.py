@@ -19,14 +19,27 @@ CONF_RE = re.compile(r"confirmation\s+(?:number|code|#)?\s*(?:is|:)?\s*([A-Za-z0
 VOICEMAIL_RE = re.compile(r"record your message|leave (?:a|your) message|after the (?:beep|tone)|voicemail", re.I)
 
 
+TOKEN_RE = re.compile(r"\b[A-Za-z0-9][A-Za-z0-9-]*\d[A-Za-z0-9-]*\b")
+
+
 def find_confirmation_number(transcript: list[dict]) -> Optional[str]:
-    """Only the supplier's (`user`) turns count, and a number must contain a digit."""
+    """Only the supplier's (`user`) turns count, and a number must contain a digit. Two accepted forms:
+    the supplier says "confirmation number is X", or answers (tersely, "it's 1234") right after the agent
+    asked for the confirmation number."""
+    asked = False
     for turn in transcript:
+        msg = turn.get("message") or ""
         if turn.get("role") != "user":
+            asked = "confirmation" in msg.lower() if msg else asked
             continue
-        for m in CONF_RE.finditer(turn.get("message") or ""):
+        for m in CONF_RE.finditer(msg):
             if any(ch.isdigit() for ch in m.group(1)):
                 return m.group(1)
+        if asked:
+            tok = next((t for t in TOKEN_RE.findall(msg) if len(t) >= 3), None)
+            if tok:
+                return tok
+        asked = False
     return None
 
 
