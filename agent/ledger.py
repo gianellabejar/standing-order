@@ -13,6 +13,7 @@ class Repos:
         db = db if db is not None else dbm.get_db()
         self.orders, self.calls, self.audit = dbm.Orders(db), dbm.Calls(db), dbm.AuditEvents(db)
         self.quotes, self.memories = dbm.PriceQuotes(db), dbm.Memories(db)
+        self.sessions, self.tenants = dbm.Sessions(db), dbm.Tenants(db)
 
 
 def create_order(tenant_id: str, order: Order, repos: Repos) -> Order:
@@ -47,6 +48,25 @@ def start_call(tenant_id: str, order_id: str, context: dict, repos: Repos, provi
     if hasattr(provider, "after_start"):
         provider.after_start(call_id)  # mock only: delivers the simulated post-call payload
     return call_id
+
+
+def place_with_memory(tenant_id: str, order_id: str, decision, repos: Repos, provider=None) -> Optional[str]:
+    """Build the call brief from memory and place the call. A supplier that memory does not say takes phone
+    orders is not called: the order goes to the owner (the email fallback is not built yet)."""
+    from agent.memory.brief import build_call_brief
+    order = repos.orders.get(tenant_id, order_id)
+    if order is None:
+        raise LookupError("order not found for this tenant")
+    brief = build_call_brief(tenant_id, order, decision, repos)
+    if brief["channel"] != "phone":
+        repos.orders.set_status(tenant_id, order_id, OrderStatus.needs_owner,
+                                needs_owner_reason=f"{decision.supplier_id} is not known to take phone orders")
+        return None
+    memories_used = sorted(set(order.memories_used) | set(brief.pop("memories_used")))
+    brief.pop("channel")
+    repos.orders.set_status(tenant_id, order_id, OrderStatus.planned, po_number=brief["po_number"],
+                            memories_used=memories_used)
+    return start_call(tenant_id, order_id, brief, repos, provider=provider)
 
 
 def apply_outcome(tenant_id: str, conversation_id: str, outcome: CallOutcome, repos: Repos,
