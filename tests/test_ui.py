@@ -23,7 +23,7 @@ MAPLE, HARBOUR = "owner@maple-bakery.example", "owner@harbour-cafe.example"
 
 @pytest.fixture
 def db(monkeypatch):
-    for k in ("OWNER_PHONE_MAPLE", "OWNER_PHONE_HARBOUR", "OWNER_EMAIL_MAPLE", "OWNER_EMAIL_HARBOUR",
+    for k in ("OWNER_PHONE_MAPLE", "OWNER_PHONE_HARBOUR", "CLIENT1_PHONE", "CLIENT2_PHONE", "CLIENT1_EMAIL", "CLIENT2_EMAIL", "SUPPLIER1_PHONE", "SUPPLIER1_EMAIL", "SUPPLIER2_EMAIL", "OWNER_EMAIL_MAPLE", "OWNER_EMAIL_HARBOUR",
               "PUBLIC_BASE_URL", "VOYAGE_API_KEY", "IMAP_USER"):
         monkeypatch.delenv(k, raising=False)
     monkeypatch.setenv("SESSION_SECRET", "test-secret-not-for-production")
@@ -59,7 +59,7 @@ def page(client, **q) -> str:
 
 
 def text_of(html: str) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+    return re.sub(r"\s+", " ", __import__("html").unescape(re.sub(r"<[^>]+>", " ", html)))  # unescape: "Sean&#39;s"
 
 
 def test_login_required_and_bad_password(db):
@@ -73,18 +73,18 @@ def test_login_required_and_bad_password(db):
 
 def test_page_shows_tenant_tiles_and_table(maple, db):
     t = text_of(page(maple))
-    assert "Sample data" in t and "Signed in as Maple Bakery" in t
+    assert "Sample data" in t and "Signed in as Sean's Bakery" in t
     assert "Every order, with its reasons." in t
     # tiles from the database: 1 needs you (oats call ended without a number), 1 confirmed, 2 of 2 used memory
     assert re.search(r"Needs you 1 ", t) and re.search(r"Confirmed 1 ", t) and "2 of 2" in t
     for po in ("MB-0001", "MB-0002"):
         assert po in t
-    assert "40 bags of flour" in t and "Supplier B" in t and "$128.00" in t
+    assert "40 bags of flour" in t and "Gianella's Ingredients" in t and "$128.00" in t
 
 
 def test_confirmation_block_only_with_a_number(maple, db):
     t = text_of(page(maple, order="MB-0001"))
-    assert "Order MB-0001" in t and "40 bags of flour from Supplier B" in t
+    assert "Order MB-0001" in t and "40 bags of flour from Gianella's Ingredients" in t
     assert "Confirmation number MB-48213 Captured from the call transcript." in t
     assert "“Need 40 bags of flour for Friday.”" in t
     assert "$3.20 per bag" in t and "Friday" in t
@@ -113,9 +113,9 @@ def test_confirmed_status_without_number_is_not_shown_confirmed(maple, db):
 def test_memory_receipt_lists_each_memory_with_source_flags(maple):
     t = text_of(page(maple, order="MB-0001"))
     assert "Memory receipt" in t
-    for mid, text in [("mem_maple_b_discount", "Supplier B gives Maple Bakery 8% off list."),
-                      ("mem_maple_b_contact", "When calling Supplier B, ask for Dave."),
-                      ("mem_maple_b_channel", "Supplier B takes orders by phone."),
+    for mid, text in [("mem_maple_b_discount", "Gianella's Ingredients gives Sean's Bakery 8% off list."),
+                      ("mem_maple_b_contact", "When calling Gianella's Ingredients, ask for Gianella."),
+                      ("mem_maple_b_channel", "Gianella's Ingredients takes orders by phone."),
                       ("mem_maple_b_po_format", "PO numbers")]:
         assert f"{mid} · Seeded · active" in t and text in t
 
@@ -136,7 +136,7 @@ def test_correct_supersedes_and_updates_the_value(maple, db):
     html = page(maple, order="MB-0001", correct="mem_maple_b_discount")
     assert "Save correction" in html and "Value the agent uses (discount pct)" in html
     r = maple.post("/memories/mem_maple_b_discount/correct", follow_redirects=False,
-                   data={"text": "Supplier B gives Maple Bakery 10% off list.", "value": "10", "order": "MB-0001",
+                   data={"text": "Gianella's Ingredients gives Sean's Bakery 10% off list.", "value": "10", "order": "MB-0001",
                          "csrf": csrf_of(html)})
     assert r.status_code == 303 and r.headers["location"] == "/?order=MB-0001&notice=corrected"
     old = dbm.Memories(db).get("maple", "mem_maple_b_discount")
@@ -145,7 +145,7 @@ def test_correct_supersedes_and_updates_the_value(maple, db):
     assert new.structured["value"] == 10 and new.source.type == "dashboard"
     assert "mem_maple_b_discount" not in {m.id for m in dbm.Memories(db).list_active("maple")}
     t = text_of(page(maple, order="MB-0001"))
-    assert "mem_maple_b_discount · Seeded · superseded" in t and "Corrected to: “Supplier B gives Maple Bakery 10% off list.”" in t
+    assert "mem_maple_b_discount · Seeded · superseded" in t and "Corrected to: “Gianella's Ingredients gives Sean's Bakery 10% off list.”" in t
     assert db.audit_events.count_documents({"event": "memory.supersede"}) == 1
 
 
@@ -182,7 +182,7 @@ def test_other_tenant_sees_nothing_and_cannot_touch_maple_memory(db):
     assert login(h, HARBOUR).status_code == 303
     html = page(h)
     t = text_of(html)
-    assert "Signed in as Harbour Cafe" in t and "0 of 0" in t and "No orders yet" in t
+    assert "Signed in as Cerebral Cafe" in t and "0 of 0" in t and "No orders yet" in t
     assert "Maple" not in t and "mem_maple" not in html and "MB-0001" not in t
     assert "MB-0001" not in text_of(page(h, order="MB-0001"))  # cannot select another tenant's order
     r = h.post("/memories/mem_maple_b_discount/forget", data={"order": "", "csrf": csrf_of(html)})

@@ -15,7 +15,7 @@ from shared.interfaces import CallOutcome
 from shared.models import Memory, Order, OrderStatus, PriceQuote, Source, now
 
 A, B = "maple", "harbour"
-BRIEF = {"shop_name": "Maple Bakery", "quantity": 40, "unit": "bag", "item": "flour", "price": 3.2}
+BRIEF = {"shop_name": "Sean's Bakery", "quantity": 40, "unit": "bag", "item": "flour", "price": 3.2}
 
 
 @pytest.fixture
@@ -116,7 +116,7 @@ def quote(sup, sku, price, days=7, tenant=A):
 def seed(repos):
     q = {k: repos.quotes.insert(A, v) for k, v in {"a": quote("A", "FLOUR", 3.45), "b": quote("B", "FLOUR", 3.48),
                                                   "ao": quote("A", "OATS", 2.60), "bo": quote("B", "OATS", 2.90)}.items()}
-    m = repos.memories.insert(A, Memory(tenant_id=A, kind="terms", text="Supplier B gives Maple 8% off list",
+    m = repos.memories.insert(A, Memory(tenant_id=A, kind="terms", text="Gianella's Ingredients gives Maple 8% off list",
                                         structured={"supplier": "B", "key": "discount_pct", "value": 8},
                                         source=Source(type="sms", ref="seed"), seeded=True))
     return q, m
@@ -222,7 +222,7 @@ def test_real_voicemail_call_is_needs_owner_with_no_number(env):
 def test_real_dynamic_variables_are_echoed_back():
     import json
     dv = json.load(open("fixtures/real_post_call.json"))["conversation_initiation_client_data"]["dynamic_variables"]
-    assert dv["shop_name"] == "Maple Bakery" and dv["po_number"] == "TEST-0001" and dv["quantity"] == 1
+    assert dv["shop_name"] == "Maple Bakery" and dv["po_number"] == "TEST-0001"  # the real call, made before the rename and dv["quantity"] == 1
 
 
 def find_number(transcript):

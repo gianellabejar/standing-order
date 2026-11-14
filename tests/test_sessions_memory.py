@@ -49,8 +49,8 @@ def repos():
     db = mongomock.MongoClient(tz_aware=True)["t"]
     r = ledger.Repos(db)
     r.memories = LocalVectorMemories(db)
-    r.tenants.insert(A, Tenant(name="Maple Bakery", profile="Small bakery in Toronto."))
-    r.tenants.insert(B, Tenant(name="Harbour Cafe", profile="Cafe by the harbour."))
+    r.tenants.insert(A, Tenant(name="Sean's Bakery", profile="Small bakery in Toronto."))
+    r.tenants.insert(B, Tenant(name="Cerebral Cafe", profile="Cafe by the harbour."))
     return r
 
 
@@ -60,7 +60,7 @@ def gov(repos):
 
 
 def seed(gov, tenant=A, supplier="supplier_b", discount=8):
-    return gov.add(tenant, "terms", f"Supplier B gives Maple Bakery {discount}% off list.", SRC,
+    return gov.add(tenant, "terms", f"Gianella's Ingredients gives Sean's Bakery {discount}% off list.", SRC,
                    {"supplier": supplier, "key": "discount_pct", "value": discount}, seeded=True)
 
 
@@ -106,7 +106,7 @@ def test_empty_session_makes_no_llm_call(repos):
 def test_summary_is_clamped_and_only_sourced_candidates_become_memories(repos, gov):
     long = "word " * 400
     res = CloseResult(summary=long, candidates=[
-        Candidate(text="Supplier B ships Tuesdays.", kind="supplier_pref", structured={"supplier": "supplier_b", "key": "delivery_day", "value": "Tue"}, source_ref="m0"),
+        Candidate(text="Gianella's Ingredients ships Tuesdays.", kind="supplier_pref", structured={"supplier": "supplier_b", "key": "delivery_day", "value": "Tue"}, source_ref="m0"),
         Candidate(text="Invented fact with a bogus source.", source_ref="m99"),
         Candidate(text="Invented fact with no source."),
     ])
@@ -116,7 +116,7 @@ def test_summary_is_clamped_and_only_sourced_candidates_become_memories(repos, g
     summary = mgr.close(A, s.id)
     assert count_tokens(summary) <= 150
     mems = repos.memories.list_active(A)
-    assert [m.text for m in mems] == ["Supplier B ships Tuesdays."]
+    assert [m.text for m in mems] == ["Gianella's Ingredients ships Tuesdays."]
     assert (mems[0].source.type, mems[0].source.ref) == ("sms", "SM7") and mems[0].embedding
     assert repos.sessions.get(A, s.id).tokens == {"prompt": 120, "completion": 40}
     assert any(e.event == "memory.add" for e in repos.audit.list(A))
@@ -160,7 +160,7 @@ def test_context_pack_never_leaks_across_tenants(repos, gov):
     seed(gov, A)
     gov.add(B, "note", "Harbour only fact", SRC)
     sb = SessionManager(repos).current(B)
-    pack = build_context_pack(B, sb, repos, "Supplier B discount off list", FakeEmbedder())
+    pack = build_context_pack(B, sb, repos, "Gianella's Ingredients discount off list", FakeEmbedder())
     assert "Maple" not in pack.text and "8%" not in pack.text and "Harbour only fact" in pack.text
 
 
@@ -172,7 +172,7 @@ def test_correction_supersedes_keeps_history_and_changes_the_decision(repos, gov
     for q in qs: repos.quotes.insert(A, q)
     items = [{"sku": "FLR", "qty": 40}]
     assert choose_supplier(items, repos.quotes.list(A), repos.memories.list_active(A)).supplier_id == "supplier_b"
-    new = gov.correct(A, old, "Supplier B no longer gives a discount.", Source(type="sms", ref="SM2"),
+    new = gov.correct(A, old, "Gianella's Ingredients no longer gives a discount.", Source(type="sms", ref="SM2"),
                       {"supplier": "supplier_b", "key": "discount_pct", "value": 0})
     assert repos.memories.get(A, old).status.value == "superseded" and repos.memories.get(A, new).supersedes == old
     assert [m.id for m in gov.history(A, new)] == [new, old]
@@ -217,9 +217,9 @@ def test_tenant_b_cannot_correct_expire_forget_or_read_history_of_a_memory(repos
 # ---------- call brief ----------
 def memories_for_b(gov):
     ids = [gov.add(A, "supplier_pref", t, SRC, {"supplier": "supplier_b", "key": k, "value": v}, seeded=True)
-           for t, k, v in (("Supplier B takes orders by phone.", "order_channel", "phone"),
-                           ("When calling Supplier B, ask for Dave.", "contact_name", "Dave"),
-                           ("Supplier B wants PO numbers like MB-0000.", "po_format", "MB-{:04d}"))]
+           for t, k, v in (("Gianella's Ingredients takes orders by phone.", "order_channel", "phone"),
+                           ("When calling Gianella's Ingredients, ask for Gianella.", "contact_name", "Gianella"),
+                           ("Gianella's Ingredients wants PO numbers like MB-0000.", "po_format", "MB-{:04d}"))]
     return ids
 
 
@@ -228,7 +228,7 @@ def test_brief_uses_memory_for_contact_po_and_channel(repos, gov):
     o = ledger.create_order(A, Order(tenant_id=A, idempotency_key="k", items=[{"sku": "FLR", "name": "all-purpose flour", "qty": 40}]), repos)
     b = build_call_brief(A, o, Decision(supplier_id="supplier_b", unit_price=3.2), repos)
     assert (b["contact_name"], b["po_number"], b["channel"], b["item"], b["quantity"], b["price"], b["shop_name"]) == \
-        ("Dave", "MB-0001", "phone", "all-purpose flour", 40, 3.2, "Maple Bakery")
+        ("Gianella", "MB-0001", "phone", "all-purpose flour", 40, 3.2, "Sean's Bakery")
     assert sorted(b["memories_used"]) == sorted(ids)
 
 
@@ -240,7 +240,7 @@ def test_place_with_memory_calls_with_the_brief_and_records_receipt(repos, gov):
     got = repos.orders.get(A, o.id)
     brief = repos.calls.get_by_conversation(A, cid).brief
     assert got.status == OrderStatus.calling and got.po_number == "MB-0001" and sorted(got.memories_used) == sorted(ids)
-    assert brief["contact_name"] == "Dave" and brief["po_number"] == "MB-0001" and brief["order_id"] == o.id
+    assert brief["contact_name"] == "Gianella" and brief["po_number"] == "MB-0001" and brief["order_id"] == o.id
     assert "channel" not in brief and "memories_used" not in brief
     o2 = ledger.create_order(A, Order(tenant_id=A, idempotency_key="k2", items=[{"sku": "FLR", "qty": 1}]), repos)
     assert build_call_brief(A, o2, Decision(supplier_id="supplier_b", unit_price=3.2), repos)["po_number"] == "MB-0002"
@@ -303,7 +303,7 @@ def test_turns_flow_through_the_thread_to_the_close_summary_and_never_cross_sess
     def llm(convo):
         seen.append(convo)
         return CloseResult(summary="Owner moved B to Thursdays.", candidates=[
-            Candidate(text="Supplier B delivers on Thursdays.", source_ref="m1"),
+            Candidate(text="Gianella's Ingredients delivers on Thursdays.", source_ref="m1"),
             Candidate(text="Said only by the agent.", source_ref="m2")]), {"prompt": 50, "completion": 20}
     mgr = make_threaded_manager(repos, llm, saver)
     t0 = now()
@@ -315,7 +315,7 @@ def test_turns_flow_through_the_thread_to_the_close_summary_and_never_cross_sess
     assert s2.thread_id != s1.thread_id
     assert "[m0] owner: Need flour for Friday" in seen[0] and "[m2] agent: Noted, Thursdays." in seen[0]
     mems = repos.memories.list_active(A)
-    assert [(m.text, m.source.type, m.source.ref) for m in mems] == [("Supplier B delivers on Thursdays.", "sms", "SM2")]
+    assert [(m.text, m.source.type, m.source.ref) for m in mems] == [("Gianella's Ingredients delivers on Thursdays.", "sms", "SM2")]
     assert repos.sessions.get(A, s1.id).summary == "Owner moved B to Thursdays."
     mgr.record(A, s2, "owner", "different topic entirely", {"type": "sms", "ref": "SM9"})
     from agent.sessions.manager import messages_from_checkpoint

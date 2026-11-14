@@ -69,7 +69,7 @@ def texts(monkeypatch):
 @pytest.fixture
 def extractor(monkeypatch):
     ex = CountingExtractor({"UPDATED prices": "llm_pdf_update", "List price catalogue": "llm_pdf_catalogue",
-                            "Alder Mill": "llm_email_quote"})
+                            "Alder Mill": "llm_email_quote", "Valley Foods": "llm_email_quote"})
     monkeypatch.setattr(llm, "EXTRACTOR", ex)
     return ex
 

@@ -30,7 +30,7 @@ MAPLE_PHONE = "+15550100001"
 
 @pytest.fixture(scope="module")
 def db():
-    for k in ("OWNER_PHONE_MAPLE", "OWNER_PHONE_HARBOUR", "TWILIO_AUTH_TOKEN", "PUBLIC_BASE_URL",
+    for k in ("OWNER_PHONE_MAPLE", "OWNER_PHONE_HARBOUR", "CLIENT1_PHONE", "CLIENT2_PHONE", "CLIENT1_EMAIL", "CLIENT2_EMAIL", "SUPPLIER1_PHONE", "SUPPLIER1_EMAIL", "SUPPLIER2_EMAIL", "TWILIO_AUTH_TOKEN", "PUBLIC_BASE_URL",
               "DASHBOARD_SEED_PASSWORD"):
         os.environ.pop(k, None)
     dbm._db.cache_clear()
