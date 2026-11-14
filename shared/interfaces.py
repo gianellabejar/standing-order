@@ -84,14 +84,29 @@ def place_order_email(tenant_id: str, order: Order) -> str:
     raise NotImplementedError
 
 
-def ingest_email(tenant_id: str, raw: bytes) -> list[PriceQuote]:
-    """Store the raw email as a Document (with hash), extract quotes once, write `price_quotes`."""
-    raise NotImplementedError
+def ingest_email(tenant_id: str, raw: bytes, ref: str = "upload") -> list[PriceQuote]:
+    """Store the raw email as a Document (with hash), extract quotes from its body and each PDF attachment
+    once, write `price_quotes`. Routing a mailbox message to a tenant is ingest.email_ingest.route_tenant.
+    Implemented in ingest/email_ingest.py."""
+    from ingest.email_ingest import ingest_email as impl
+    return impl(tenant_id, raw, ref=ref).quotes
 
 
-def extract_quotes_from_pdf(tenant_id: str, pdf_bytes: bytes, supplier_id: str) -> list[PriceQuote]:
-    """Text PDFs only: pdfplumber/pypdf text, then structured LLM extraction, source = document id + page."""
-    raise NotImplementedError
+def extract_quotes_from_pdf(tenant_id: str, pdf_bytes: bytes, supplier_id: Optional[str] = None,
+                            filename: str = "catalogue.pdf") -> list[PriceQuote]:
+    """Text PDFs only (pypdf), then ONE structured LLM call; source = document id + page. supplier_id is
+    detected from the text when not given. A PDF with no extractable text is not guessed at: the
+    document is marked no_text and the owner is texted. Implemented in ingest/quotes.py."""
+    from ingest.quotes import ingest_pdf
+    return ingest_pdf(tenant_id, pdf_bytes, filename=filename, supplier_id=supplier_id).quotes
+
+
+def extract_quotes_from_email_text(tenant_id: str, text: str, document_id: str,
+                                   supplier_id: Optional[str] = None) -> list[PriceQuote]:
+    """Email-body equivalent of extract_quotes_from_pdf for an already-stored email Document.
+    Implemented in ingest/quotes.py."""
+    from ingest.quotes import extract_from_text
+    return extract_from_text(tenant_id, text, document_id, kind="email", supplier_id=supplier_id).quotes
 
 
 def close_session(tenant_id: str, session_id: str) -> str:

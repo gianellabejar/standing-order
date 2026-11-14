@@ -41,8 +41,9 @@ def seed(db) -> dict:
 
     for t in tenants:
         phone = os.environ.get(t["phone_env"]) or t["phone_default"]
-        dbm.Tenants(db).insert(t["id"], Tenant(name=t["name"], phones=[phone], prefs=t["prefs"],
-                                               profile=t["profile"]))
+        email = (os.environ.get(t["email_env"]) or t["email_default"]).strip().lower()
+        dbm.Tenants(db).insert(t["id"], Tenant(name=t["name"], phones=[phone], emails=[email],
+                                               prefs=t["prefs"], profile=t["profile"]))
     counts["tenants"] = len(tenants)
 
     # Documents + quotes. Each tenant gets its own copy: the documents are the same synthetic files,

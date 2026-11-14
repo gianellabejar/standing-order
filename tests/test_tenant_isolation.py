@@ -9,7 +9,7 @@ from shared import db as dbmod
 from shared.models import Memory, Source
 
 A, B = "maple", "harbour"
-UNSCOPED = {"resolve_by_phone", "resolve_by_email"}  # the only allowed tenant-less reads
+UNSCOPED = {"resolve_by_phone", "resolve_by_email", "resolve_by_owner_email"}  # the only allowed tenant-less reads
 SECRET = "Supplier B gives Maple Bakery 8% off list"
 
 

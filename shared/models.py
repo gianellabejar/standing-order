@@ -25,6 +25,7 @@ class Tenant(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
     name: str
     phones: list[str] = []          # owner phone numbers (E.164); inbound SMS routes on these
+    emails: list[str] = []          # owner email addresses (lowercase); forwarded supplier emails route on these
     prefs: dict[str, Any] = {}      # e.g. approval_threshold, forwarding_address
     profile: str = ""               # fixed ~150-token profile for the context pack
 
@@ -78,13 +79,23 @@ class PriceQuote(Doc):
     valid_until: datetime
     source: dict[str, Any]          # {"document_id": ..., "page": ...}
     status: str = "active"          # active | superseded
+    superseded_by: Optional[str] = None  # id of the newer quote that replaced this one
 
 
 class Document(Doc):
     kind: Literal["email", "pdf"]
-    ref: str
-    sha256: str
+    ref: str                        # where the raw bytes came from, e.g. "imap:<uidvalidity>:<uid>" or a file path
+    sha256: str                     # of the raw bytes; (tenant_id, sha256) is unique, so a document is parsed once
     received_at: datetime = Field(default_factory=now)
+    parent_id: Optional[str] = None  # a PDF attachment points at its email
+    filename: Optional[str] = None
+    message_id: Optional[str] = None
+    supplier_id: Optional[str] = None
+    page_count: Optional[int] = None
+    status: str = "received"        # received | parsed | no_text | unknown_supplier | failed
+    status_reason: Optional[str] = None
+    quote_ids: list[str] = []
+    tokens: dict[str, int] = {}     # {"prompt": n, "completion": n} for the one extraction call
 
 
 class OrderStatus(str, Enum):

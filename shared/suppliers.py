@@ -1,11 +1,11 @@
-"""Static synthetic supplier directory (data/seed/suppliers.json). Not tenant data: per-tenant terms
+"""Static synthetic supplier directory (shared/suppliers.json; deployed, unlike data/). Not tenant data: per-tenant terms
 live in memories. Phone numbers come from env (a teammate's verified phone), never from the repo."""
 import json
 import os
 from functools import lru_cache
 from pathlib import Path
 
-FILE = Path(__file__).resolve().parent.parent / "data" / "seed" / "suppliers.json"
+FILE = Path(__file__).resolve().parent / "suppliers.json"
 
 
 @lru_cache
