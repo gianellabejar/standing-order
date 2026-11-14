@@ -19,13 +19,14 @@ def load() -> dict:
     return json.loads((SEED / "catalogue.json").read_text(encoding="utf-8"))
 
 
-def make_pdf(cat: dict, issued: date, path: Path) -> None:
+def make_pdf(cat: dict, issued: date, path: Path, prices_key: str = "supplier_b",
+             heading: str = "List price catalogue.") -> None:
     valid = issued + timedelta(days=cat["valid_days"])
     c = canvas.Canvas(str(path), pagesize=LETTER, invariant=1)  # invariant: same bytes for same input
     c.setTitle("Birchway Wholesale price list (synthetic)")
     y = 740
     for line, size in [("Birchway Wholesale - Supplier B (SYNTHETIC DEMO DATA)", 14),
-                       (f"List price catalogue. Issued {issued.isoformat()}. Valid until {valid.isoformat()}.", 10),
+                       (f"{heading} Issued {issued.isoformat()}. Valid until {valid.isoformat()}.", 10),
                        ("Prices in CAD per unit, before any account discount. Phone orders welcome.", 10)]:
         c.setFont("Helvetica-Bold" if size > 10 else "Helvetica", size)
         c.drawString(72, y, line)
@@ -35,7 +36,7 @@ def make_pdf(cat: dict, issued: date, path: Path) -> None:
     for x, h in ((72, "SKU"), (180, "Description"), (400, "Unit"), (470, "List price")):
         c.drawString(x, y, h)
     c.setFont("Helvetica", 10)
-    for sku, price in cat["supplier_b"].items():
+    for sku, price in cat[prices_key].items():
         y -= 18
         meta = cat["skus"][sku]
         for x, v in ((72, sku), (180, meta["name"]), (400, meta["unit"]), (470, f"${price:.2f}")):
@@ -60,12 +61,28 @@ def make_eml(cat: dict, issued: date, path: Path) -> None:
     path.write_bytes(bytes(m))
 
 
+def make_scanned_pdf(path: Path) -> None:
+    """A PDF with NO text layer (only drawn shapes), standing in for a scanned catalogue."""
+    c = canvas.Canvas(str(path), pagesize=LETTER, invariant=1)
+    c.setFillGray(0.85)
+    c.rect(60, 80, 492, 640, fill=1, stroke=0)
+    c.setFillGray(0.3)
+    for i in range(18):  # grey bars where printed lines would be
+        c.rect(80, 680 - i * 32, 300 + (i * 37) % 120, 10, fill=1, stroke=0)
+    c.showPage()
+    c.save()
+
+
 def generate(issued: date | None = None) -> dict[str, Path]:
     issued = issued or date.today()
     cat = load()
     OUT.mkdir(exist_ok=True)
-    paths = {"pdf": OUT / "supplier_b_catalogue.pdf", "eml": OUT / "supplier_a_quote.eml"}
+    paths = {"pdf": OUT / "supplier_b_catalogue.pdf", "eml": OUT / "supplier_a_quote.eml",
+             "pdf_update": OUT / "supplier_b_update.pdf", "pdf_scanned": OUT / "supplier_b_scanned.pdf"}
     make_pdf(cat, issued, paths["pdf"])
+    make_pdf(cat, issued, paths["pdf_update"], prices_key="supplier_b_update",
+             heading="UPDATED prices (replaces earlier list for these items).")
+    make_scanned_pdf(paths["pdf_scanned"])
     make_eml(cat, issued, paths["eml"])
     return paths
 
