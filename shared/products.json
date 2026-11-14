@@ -18,5 +18,25 @@
     "name": "Unsalted butter, 454 g block",
     "unit": "block",
     "short": "butter"
+  },
+  "EGG-LG-30": {
+    "name": "Large eggs, tray of 30",
+    "unit": "tray",
+    "short": "eggs"
+  },
+  "MLK-2P-4L": {
+    "name": "2% milk, 4 L bag",
+    "unit": "bag",
+    "short": "milk"
+  },
+  "CRM-35-1L": {
+    "name": "Whipping cream 35%, 1 L carton",
+    "unit": "carton",
+    "short": "cream"
+  },
+  "YST-ID-500G": {
+    "name": "Instant dry yeast, 500 g pack",
+    "unit": "pack",
+    "short": "yeast"
   }
 }
