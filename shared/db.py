@@ -72,6 +72,12 @@ class Tenants(_Repo):
         obj.id = self._q(tenant_id)["tenant_id"]  # a tenant's _id IS its tenant_id
         return super().insert(tenant_id, obj)
 
+    def set_contacts(self, tenant_id: str, phones: list[str], emails: list[str]) -> bool:
+        """Update a tenant's owner phones and emails in place (no reset). Returns True if it changed."""
+        r = self._c.update_one({"_id": self._q(tenant_id)["tenant_id"]},
+                               {"$set": {"phones": phones, "emails": [e.strip().lower() for e in emails]}})
+        return r.modified_count == 1
+
     def resolve_by_owner_email(self, email: str) -> Optional[Tenant]:
         """UNSCOPED by necessity: routing a forwarded email. Returns only the tenant record."""
         d = self._c.find_one({"emails": email.strip().lower()})

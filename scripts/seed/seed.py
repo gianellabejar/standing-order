@@ -2,6 +2,7 @@
 
   python -m scripts.seed.seed            # seed an empty database (refuses if already seeded)
   python -m scripts.seed.seed --reset    # drop the app database, then seed  (= make reset)
+  python -m scripts.seed.seed --sync-contacts  # copy owner phones/emails from .env into tenants, no wipe
 
 Everything is written through the tenant-scoped repositories in shared/db.py.
 """
@@ -33,6 +34,20 @@ def load(name: str):
     return json.loads((SEED / name).read_text(encoding="utf-8"))
 
 
+def contacts(t: dict) -> tuple[str, str]:
+    phone = os.environ.get(t["phone_env"]) or t["phone_default"]
+    email = (os.environ.get(t["email_env"]) or t["email_default"]).strip().lower()
+    return phone, email
+
+
+def sync_contacts(db) -> None:
+    for t in load("tenants.json"):
+        phone, email = contacts(t)
+        changed = dbm.Tenants(db).set_contacts(t["id"], [phone], [email])
+        print(f"{t['id']}: {'updated' if changed else 'already up to date'}"
+              f" (phone ...{phone[-4:]}, email {email.split('@')[0][:3]}***@{email.split('@')[-1]})")
+
+
 def seed(db) -> dict:
     counts = {}
     tenants = load("tenants.json")
@@ -40,8 +55,7 @@ def seed(db) -> dict:
         raise SystemExit("already seeded; use --reset (make reset) to wipe and reseed")
 
     for t in tenants:
-        phone = os.environ.get(t["phone_env"]) or t["phone_default"]
-        email = (os.environ.get(t["email_env"]) or t["email_default"]).strip().lower()
+        phone, email = contacts(t)
         dbm.Tenants(db).insert(t["id"], Tenant(name=t["name"], phones=[phone], emails=[email],
                                                prefs=t["prefs"], profile=t["profile"]))
     counts["tenants"] = len(tenants)
@@ -94,11 +108,15 @@ def seed(db) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--reset", action="store_true", help="drop the app database first")
+    ap.add_argument("--sync-contacts", action="store_true", help="only update owner phones/emails from .env")
     args = ap.parse_args()
     if not os.environ.get("MONGODB_URI"):
         raise SystemExit("MONGODB_URI is not set (copy .env.example to .env)")
     t0 = time.perf_counter()
     db = dbm._db()
+    if args.sync_contacts:
+        sync_contacts(db)
+        return
     if args.reset:
         print("dropped", dbm.drop_app_database(db))
     dbm.ensure_indexes(db)

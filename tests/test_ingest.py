@@ -272,3 +272,22 @@ def test_live_deepseek_extraction(db, docs, monkeypatch):
     assert quote_rows(r.quotes) == [("supplier_b", "FLR-AP-2KG", "bag", 3.48), ("supplier_b", "OAT-RL-1KG", "bag", 3.10),
                                     ("supplier_b", "SUG-GR-2KG", "bag", 2.55)]
     assert all(q.source["page"] == 1 for q in r.quotes) and r.document.tokens["prompt"] > 0
+
+
+def test_poller_output_is_readable():
+    assert poller.describe({"initialized": True, "skipped_existing": 3, "processed": []})[0].startswith(
+        "started fresh: skipped 3")
+    assert poller.describe({"initialized": False, "processed": []}) == ["no new mail"]
+    lines = poller.describe({"initialized": False, "processed": [
+        {"uid": 5, "tenant": "maple", "result": "ingested", "quotes": 2, "documents": ["d1", "d2"],
+         "statuses": ["parsed", "parsed"]},
+        {"uid": 6, "result": "unknown_sender"}]})
+    assert lines == ["email #5 -> maple: 2 quote(s); documents d1 (parsed), d2 (parsed)", "email #6: unknown_sender"]
+
+
+def test_sync_contacts_updates_in_place(db):
+    assert dbm.Tenants(db).set_contacts("harbour", ["+15550109999"], [" New@Example.COM "])
+    t = dbm.Tenants(db).get("harbour")
+    assert t.phones == ["+15550109999"] and t.emails == ["new@example.com"]
+    assert dbm.Tenants(db).resolve_by_phone("+15550109999").id == "harbour"
+    assert dbm.Tenants(db).get("maple").phones == ["+15550100001"]  # other tenant untouched
