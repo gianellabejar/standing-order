@@ -28,6 +28,7 @@ class Tenant(BaseModel):
     emails: list[str] = []          # owner email addresses (lowercase); forwarded supplier emails route on these
     prefs: dict[str, Any] = {}      # e.g. approval_threshold, forwarding_address
     profile: str = ""               # fixed ~150-token profile for the context pack
+    seeded: bool = False            # synthetic demo tenant (dashboard shows a "Sample data" chip)
 
 
 class User(Doc):
@@ -47,7 +48,7 @@ class Session(Doc):
 
 
 class Source(BaseModel):
-    type: Literal["sms", "email", "pdf", "call", "session"]
+    type: Literal["sms", "email", "pdf", "call", "session", "dashboard"]
     ref: str
 
 
@@ -120,6 +121,12 @@ class Order(Doc):
     call_id: Optional[str] = None
     tokens: dict[str, int] = {}
     needs_owner_reason: Optional[str] = None
+    request_text: Optional[str] = None   # the owner's original message
+    delivery: Optional[str] = None       # requested delivery, as the owner said it ("Friday")
+    unit_price: Optional[float] = None   # from the Decision, after memory-derived terms
+    total: Optional[float] = None
+    channel: Optional[str] = None        # "phone" or "email": how the order is placed
+    seeded: bool = False                 # synthetic demo order, disclosed
     created_at: datetime = Field(default_factory=now)
 
 

@@ -23,8 +23,7 @@ load_dotenv(ROOT / ".env")
 
 from data.seed import make_docs  # noqa: E402
 from shared import db as dbm  # noqa: E402
-from shared.models import (AuditEvent, Document, Memory, Order, OrderStatus, PriceQuote, Source,  # noqa: E402
-                           Tenant, now)
+from shared.models import (AuditEvent, Document, Memory, PriceQuote, Source, Tenant, User)  # noqa: E402
 
 SEED = ROOT / "data" / "seed"
 SEED_SOURCE = Source(type="session", ref="seed:data/seed/memories.json")
@@ -48,6 +47,22 @@ def sync_contacts(db) -> None:
               f" (phone ...{phone[-4:]}, email {email.split('@')[0][:3]}***@{email.split('@')[-1]})")
 
 
+def seed_users(db, tenants: list[dict]) -> int:
+    """One dashboard login per seeded tenant: the owner email, password from DASHBOARD_SEED_PASSWORD.
+    No password set = no seeded logins (the repo is public, so there is no default password)."""
+    password = os.environ.get("DASHBOARD_SEED_PASSWORD", "")
+    if not password:
+        print("DASHBOARD_SEED_PASSWORD not set: no seeded dashboard logins (register one instead)")
+        return 0
+    from ui.auth import hash_password
+    password_hash = hash_password(password)  # bcrypt is deliberately slow: hash once, same password for both
+    users = dbm.Users(db)
+    for t in tenants:
+        users.insert(t["id"], User(id=f"user_{t['id']}", tenant_id=t["id"], email=contacts(t)[1],
+                                   password_hash=password_hash))
+    return len(tenants)
+
+
 def seed(db) -> dict:
     counts = {}
     tenants = load("tenants.json")
@@ -57,7 +72,7 @@ def seed(db) -> dict:
     for t in tenants:
         phone, email = contacts(t)
         dbm.Tenants(db).insert(t["id"], Tenant(name=t["name"], phones=[phone], emails=[email],
-                                               prefs=t["prefs"], profile=t["profile"]))
+                                               prefs=t["prefs"], profile=t["profile"], seeded=True))
     counts["tenants"] = len(tenants)
 
     # Documents + quotes. Each tenant gets its own copy: the documents are the same synthetic files,
@@ -91,13 +106,12 @@ def seed(db) -> dict:
                    source=SEED_SOURCE, seeded=True) for m in mems if m["tenant"] == t["id"]])
     counts["memories"] = len(mems)
 
-    # One prior Maple order so "same as last time" has something to resolve. Harbour has none.
-    dbm.Orders(db).insert("maple", Order(
-        id="ord_seed_maple_prev", tenant_id="maple", status=OrderStatus.confirmed,
-        idempotency_key="seed-maple-prev", supplier_id="supplier_b",
-        items=[{"sku": "FLR-AP-2KG", "qty": 40, "unit": "bag"}], confirmation_number="SEED-0001",
-        created_at=now() - timedelta(days=7)))
-    counts["orders"] = 1
+    # Maple's demo orders come from the real decision + ledger code with a MOCK call (see demo_orders.py).
+    # ord_seed_maple_prev (40 bags of flour) is what "same as last time" resolves to. Harbour has none.
+    from scripts.seed import demo_orders
+    counts.update(demo_orders.write(db, demo_orders.build(db)))
+
+    counts["users"] = seed_users(db, tenants)
 
     for t in tenants:
         dbm.AuditEvents(db).insert(t["id"], AuditEvent(tenant_id=t["id"], actor="code", event="seed",
