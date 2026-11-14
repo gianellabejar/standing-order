@@ -1,5 +1,5 @@
 """Forwarded supplier emails. The owner forwards a supplier's email to the throwaway inbox; the
-forwarder's address (From) picks the tenant. The body and every PDF attachment become documents,
+forwarder's address (From) picks the tenant. The body and every PDF and CSV attachment become documents,
 each parsed once.
 
 Handles inline forwards (Gmail "---------- Forwarded message ---------") and forward-as-attachment
@@ -68,6 +68,17 @@ def pdf_attachments(msg: EmailMessage) -> list[tuple[str, bytes]]:
     return out
 
 
+def csv_attachments(msg: EmailMessage) -> list[tuple[str, bytes]]:
+    out = []
+    for part in msg.walk():
+        name = part.get_filename() or ""
+        if part.get_content_type() in ("text/csv", "application/csv") or name.lower().endswith(".csv"):
+            data = part.get_payload(decode=True)
+            if data:
+                out.append((name or "attachment.csv", data))
+    return out
+
+
 def ingest_email(tenant_id: str, raw: bytes, ref: str = "upload", db=None) -> q.IngestResult:
     msg = parse(raw)
     doc, created = q.store_document(tenant_id, raw, "email", ref, db=db,
@@ -87,4 +98,8 @@ def ingest_email(tenant_id: str, raw: bytes, ref: str = "upload", db=None) -> q.
     for name, data in pdf_attachments(msg):
         result.children.append(q.ingest_pdf(tenant_id, data, filename=name, parent_id=doc.id,
                                             ref=f"{ref}#{name}", supplier_hint=supplier, db=db))
+    from ingest.csv_quotes import ingest_csv
+    for name, data in csv_attachments(msg):
+        result.children.append(ingest_csv(tenant_id, data, filename=name, parent_id=doc.id,
+                                          ref=f"{ref}#{name}", supplier_hint=supplier, db=db))
     return result

@@ -88,7 +88,7 @@ class PriceQuote(Doc):
 
 
 class Document(Doc):
-    kind: Literal["email", "pdf"]
+    kind: Literal["email", "pdf", "csv"]
     ref: str                        # where the raw bytes came from, e.g. "imap:<uidvalidity>:<uid>" or a file path
     sha256: str                     # of the raw bytes; (tenant_id, sha256) is unique, so a document is parsed once
     received_at: datetime = Field(default_factory=now)

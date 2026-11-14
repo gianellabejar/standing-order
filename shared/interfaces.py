@@ -113,6 +113,14 @@ def extract_quotes_from_pdf(tenant_id: str, pdf_bytes: bytes, supplier_id: Optio
     return ingest_pdf(tenant_id, pdf_bytes, filename=filename, supplier_id=supplier_id).quotes
 
 
+def extract_quotes_from_csv(tenant_id: str, csv_bytes: bytes, supplier_id: Optional[str] = None,
+                            filename: str = "price_list.csv") -> list[PriceQuote]:
+    """CSV price list read in plain code (no LLM) when the columns are recognised; otherwise one LLM call.
+    Source = document id + CSV line number. Implemented in ingest/csv_quotes.py."""
+    from ingest.csv_quotes import ingest_csv
+    return ingest_csv(tenant_id, csv_bytes, filename=filename, supplier_id=supplier_id).quotes
+
+
 def extract_quotes_from_email_text(tenant_id: str, text: str, document_id: str,
                                    supplier_id: Optional[str] = None) -> list[PriceQuote]:
     """Email-body equivalent of extract_quotes_from_pdf for an already-stored email Document.

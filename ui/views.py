@@ -151,9 +151,11 @@ def _quotes(tenant_id: str, db) -> list[dict]:
             src = "Unknown document"
         else:
             name = d.filename or os.path.basename(d.ref) or d.id
-            src = f"{'PDF' if d.kind == 'pdf' else 'Email'}: {name}"
+            src = f"{ {'pdf': 'PDF', 'csv': 'CSV'}.get(d.kind, 'Email') }: {name}"
             if q.source.get("page"):
                 src += f", page {q.source['page']}"
+            elif q.source.get("row"):
+                src += f", line {q.source['row']}"
         rows.append({"supplier": supplier_label(q.supplier_id), "item": product_name(q.sku),
                      "price": f"{money(q.price)} per {q.unit}", "valid_until": local_date(q.valid_until), "source": src})
     return rows

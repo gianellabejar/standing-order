@@ -1,7 +1,8 @@
-"""Ingest a local .eml or .pdf through the same pipeline as the poller (no inbox needed).
+"""Ingest a local .eml, .pdf or .csv through the same pipeline as the poller (no inbox needed).
 
   python -m ingest.ingest_file data/generated/supplier_b_update.pdf --tenant maple
   python -m ingest.ingest_file data/generated/supplier_a_quote.eml --tenant maple
+  python -m ingest.ingest_file data/catalogues/valley_foods_catalogue.csv --tenant maple
   python -m ingest.ingest_file some.pdf --tenant maple --recorded tests/fixtures/llm_pdf_update.json  # no LLM call
 """
 import argparse
@@ -28,6 +29,9 @@ def main() -> None:
     ref = f"file:{a.path.name}"
     if a.path.suffix.lower() == ".pdf":
         r = quotes.ingest_pdf(a.tenant, raw, filename=a.path.name, ref=ref)
+    elif a.path.suffix.lower() == ".csv":
+        from ingest.csv_quotes import ingest_csv
+        r = ingest_csv(a.tenant, raw, filename=a.path.name, ref=ref)
     else:
         r = email_ingest.ingest_email(a.tenant, raw, ref=ref)
 
