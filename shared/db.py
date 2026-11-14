@@ -72,6 +72,17 @@ class Tenants(_Repo):
         obj.id = self._q(tenant_id)["tenant_id"]  # a tenant's _id IS its tenant_id
         return super().insert(tenant_id, obj)
 
+    def set_contacts(self, tenant_id: str, phones: list[str], emails: list[str]) -> bool:
+        """Update a tenant's owner phones and emails in place (no reset). Returns True if it changed."""
+        r = self._c.update_one({"_id": self._q(tenant_id)["tenant_id"]},
+                               {"$set": {"phones": phones, "emails": [e.strip().lower() for e in emails]}})
+        return r.modified_count == 1
+
+    def resolve_by_owner_email(self, email: str) -> Optional[Tenant]:
+        """UNSCOPED by necessity: routing a forwarded email. Returns only the tenant record."""
+        d = self._c.find_one({"emails": email.strip().lower()})
+        return Tenant(**d) if d else None
+
     def resolve_by_phone(self, phone: str) -> Optional[Tenant]:
         """UNSCOPED by necessity: inbound SMS routing. Returns only the tenant record."""
         d = self._c.find_one({"phones": phone})
@@ -174,16 +185,44 @@ class PriceQuotes(_Repo):
             raise LookupError("quote not found for this tenant")
         new.supersedes = old_id
         new_id = self.insert(tenant_id, new)
-        self._c.update_one(self._q(tenant_id, _id=old_id), {"$set": {"status": "superseded"}})
+        self._c.update_one(self._q(tenant_id, _id=old_id), {"$set": {"status": "superseded", "superseded_by": new_id}})
         return new_id
 
     def list_valid(self, tenant_id: str, sku: Optional[str] = None):
         flt = {"status": "active", "valid_until": {"$gt": now()}}
         return self.list(tenant_id, **flt, **({"sku": sku} if sku else {}))
 
+    def supersede_older(self, tenant_id: str, supplier_id: str, sku: str, keep_id: str) -> int:
+        """A newer quote replaces older active ones for the same supplier and SKU. History is kept."""
+        r = self._c.update_many(self._q(tenant_id, supplier_id=supplier_id, sku=sku, status="active",
+                                        _id={"$ne": keep_id}),
+                                {"$set": {"status": "superseded", "superseded_by": keep_id}})
+        return r.modified_count
+
+
+class IngestState:
+    """System bookkeeping for the IMAP poller (mailbox watermark). Holds no tenant data, so it is not a
+    tenant-scoped repo; it is keyed by mailbox name only."""
+
+    def __init__(self, db=None):
+        self._c = (db if db is not None else _db())["ingest_state"]
+
+    def get(self, mailbox: str) -> dict:
+        return self._c.find_one({"_id": mailbox}) or {}
+
+    def set(self, mailbox: str, **fields) -> None:
+        self._c.update_one({"_id": mailbox}, {"$set": fields}, upsert=True)
+
 
 class Documents(_Repo):
     name, model = "documents", Document
+
+    def get_by_hash(self, tenant_id: str, sha256: str) -> Optional[Document]:
+        d = self._c.find_one(self._q(tenant_id, sha256=sha256))
+        return Document(**d) if d else None
+
+    def set_status(self, tenant_id: str, id: str, status: str, **fields) -> None:
+        self._c.update_one(self._q(tenant_id, _id=id), {"$set": {"status": status, **fields}})
 
 
 class Orders(_Repo):
@@ -253,6 +292,8 @@ def ensure_indexes(db=None) -> None:
     for c in ("memories", "price_quotes", "sessions", "documents", "calls", "audit_events", "users"):
         db[c].create_index("tenant_id")
     db.tenants.create_index("phones")
+    db.tenants.create_index("emails")
+    db.documents.create_index([("tenant_id", ASCENDING), ("sha256", ASCENDING)], unique=True)
     if any(i["name"] == VECTOR_INDEX for i in db.memories.list_search_indexes()):
         return
     db.memories.create_search_index(SearchIndexModel(name=VECTOR_INDEX, type="vectorSearch", definition={

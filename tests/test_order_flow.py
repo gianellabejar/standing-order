@@ -101,6 +101,7 @@ def test_price_correction_supersedes_the_quote_and_the_add_uses_the_new_price(wo
     old = r.quotes.get(M, f"q_{M}_supplier_b_{OATS}")
     new = [q for q in r.quotes.list_valid(M, OATS) if q.supplier_id == "supplier_b"][0]
     assert old.status == "superseded" and new.price == 2.80 and new.supersedes == old.id   # history kept
+    assert old.superseded_by == new.id                                                     # linked both ways
     assert any(e.event == "quote.supersede" and e.ids == [old.id, new.id] for e in r.audit.list(M))
     reply = say(flow, "Add 10 bags of oats to Friday's order", sid="SM3")
     pending = r.orders.awaiting_approval(M)

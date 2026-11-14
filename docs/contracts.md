@@ -67,3 +67,12 @@ See `.env.example`: MONGODB_URI, MONGODB_DB, DEEPSEEK_API_KEY, FALLBACK_LLM_API_
 
 ## Seed data ids (stable across resets)
 Tenants `maple`, `harbour` (a tenant's `_id` is its `tenant_id`). Suppliers `supplier_a`, `supplier_b` (`shared/suppliers.py`; B's phone from `SUPPLIER_B_PHONE`). Flour SKU `FLR-AP-2KG`. Quotes `q_<tenant>_<supplier>_<sku>`, documents `doc_<tenant>_<supplier>_<pdf|email>`, memories `mem_*` (see `data/seed/memories.json`), prior order `ord_seed_maple_prev`. Records inserted without an id get a uuid4 hex string `_id`.
+
+## Email and PDF ingestion (`ingest/`)
+- Inbox: `IMAP_HOST` / `IMAP_USER` / `IMAP_PASSWORD`, `INBOX` opened read-only, messages fetched with `BODY.PEEK[]` (never marked read). A UID watermark in `ingest_state` (`_id = "<imap user>/INBOX"`) tracks progress. The first poll after a reset only sets the watermark, so mail already in the inbox is skipped.
+- Trigger: `python -m ingest.poller` (loop, 30 to 60 s), `--once`, or `GET|POST /ingest/poll` with `Authorization: Bearer $CRON_SECRET` (on Vercel the route refuses to run without `CRON_SECRET`).
+- Routing: the forwarder's `From` address, lowercased, matched against `tenants.emails` (`OWNER_EMAIL_MAPLE`, `OWNER_EMAIL_HARBOUR`). Unknown sender: nothing stored.
+- Storage: every email and every PDF attachment is a `documents` record with `sha256` of the raw bytes; `(tenant_id, sha256)` is unique, so a document is parsed once per tenant. Attachments have `parent_id` = the email. `status`: `parsed`, `no_text` (scanned PDF: owner texted, nothing guessed), `unknown_supplier` (owner texted), `failed`.
+- Extraction: one DeepSeek call per document (`json_mode`), validated by `ingest.llm.Extraction`. Code then picks the supplier (names and domains in `shared/suppliers.json`), drops lines with no validity date or an expired one, and keeps `page` only if that page exists. An email body with no price-like text gets no LLM call.
+- Quotes: `source = {"document_id", "page" (PDF) or null (email), "kind"}`. A new quote for the same supplier and SKU sets older active ones to `status: "superseded"`, `superseded_by: <new id>` (history kept).
+- Interfaces: `ingest_email`, `extract_quotes_from_pdf`, `extract_quotes_from_email_text` in `shared/interfaces.py`.

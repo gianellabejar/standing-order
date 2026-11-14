@@ -4,6 +4,8 @@
     "name": "Maple Bakery",
     "phone_env": "OWNER_PHONE_MAPLE",
     "phone_default": "+15550100001",
+    "email_env": "OWNER_EMAIL_MAPLE",
+    "email_default": "owner@maple-bakery.example",
     "prefs": {"approval_threshold": 100, "currency": "CAD", "delivery_days": ["Tue", "Fri"]},
     "profile": "Maple Bakery is a small neighbourhood bakery (synthetic). Owner orders dry goods by text, usually for Friday delivery. Main items: all-purpose flour, rolled oats, granulated sugar. Two suppliers on file: Supplier A (quotes by email) and Supplier B (PDF catalogue, takes phone orders). Prefers the lowest landed price and short confirmations."
   },
@@ -12,6 +14,8 @@
     "name": "Harbour Cafe",
     "phone_env": "OWNER_PHONE_HARBOUR",
     "phone_default": "+15550100002",
+    "email_env": "OWNER_EMAIL_HARBOUR",
+    "email_default": "owner@harbour-cafe.example",
     "prefs": {"approval_threshold": 75, "currency": "CAD", "delivery_days": ["Tue"]},
     "profile": "Harbour Cafe is a small waterfront cafe (synthetic). Owner orders baking supplies by text for Tuesday delivery. Uses the same two suppliers as other shops but has no negotiated terms on file."
   }

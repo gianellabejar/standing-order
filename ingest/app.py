@@ -8,11 +8,12 @@ load_dotenv()
 
 from fastapi import FastAPI  # noqa: E402
 
-from ingest import sms  # noqa: E402
+from ingest import routes, sms  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 app = FastAPI(title="Order Desk ingest")
 app.include_router(sms.router)
+app.include_router(routes.router)
 
 
 @app.get("/healthz")
