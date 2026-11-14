@@ -89,11 +89,8 @@ def extract_from_text(tenant_id: str, text: str, document_id: str, kind: str, su
         raise
     supplier_id = supplier_id or detect_supplier(extraction.supplier_name)
     if supplier_id is None:
-        docs.set_status(tenant_id, document_id, "unknown_supplier", tokens=usage,
-                        status_reason=f"supplier not recognised (model said {extraction.supplier_name!r})")
-        notify_owner(tenant_id, f"I got a price document ({doc.filename or kind}) but couldn't tell which "
-                                "supplier it is from, so I saved no prices. Which supplier is it?", db)
-        return IngestResult(docs.get(tenant_id, document_id))
+        return unknown_supplier(tenant_id, document_id, doc.filename or kind,
+                                f"supplier not recognised (model said {extraction.supplier_name!r})", usage, db)
 
     quotes, rejected, today = [], [], now()
     for q in extraction.quotes:
@@ -109,6 +106,23 @@ def extract_from_text(tenant_id: str, text: str, document_id: str, kind: str, su
                                  sku=q.sku.strip().upper(), unit=q.unit.strip().lower(), price=round(q.price, 4),
                                  valid_until=valid_until,
                                  source={"document_id": document_id, "page": page, "kind": kind}))
+    return save_quotes(tenant_id, document_id, supplier_id, quotes, rejected, usage, db)
+
+
+def unknown_supplier(tenant_id: str, document_id: str, label: str, reason: str, usage: dict, db=None) -> IngestResult:
+    """We do not guess a supplier: save no prices, ask the owner."""
+    docs = dbm.Documents(db)
+    docs.set_status(tenant_id, document_id, "unknown_supplier", tokens=usage, status_reason=reason)
+    notify_owner(tenant_id, f"I got a price document ({label}) but couldn't tell which "
+                            "supplier it is from, so I saved no prices. Which supplier is it?", db)
+    return IngestResult(docs.get(tenant_id, document_id))
+
+
+def save_quotes(tenant_id: str, document_id: str, supplier_id: str, quotes: list[PriceQuote], rejected: list[dict],
+                usage: dict, db=None) -> IngestResult:
+    """The one write path for every document kind: insert, supersede older quotes for the same supplier and
+    SKU (history kept), mark the document parsed."""
+    docs, quotes_repo = dbm.Documents(db), dbm.PriceQuotes(db)
     ids = quotes_repo.insert_many(tenant_id, quotes)
     for q in quotes:
         quotes_repo.supersede_older(tenant_id, q.supplier_id, q.sku, keep_id=q.id)

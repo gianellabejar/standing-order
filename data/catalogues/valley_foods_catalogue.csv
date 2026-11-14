@@ -1,0 +1,7 @@
+supplier,sku,product,pack_size,unit,list_price_cad,valid_from,valid_until,notes
+Valley Foods,FLR-AP-2KG,All-purpose flour,2 kg,bag,3.48,2026-11-14,2026-12-14,List price before account discounts. Synthetic demo data.
+Valley Foods,EGG-LG-30,Large eggs,30 eggs,tray,9.20,2026-11-14,2026-12-14,List price before account discounts. Synthetic demo data.
+Valley Foods,MLK-2P-4L,2% milk,4 L,bag,6.15,2026-11-14,2026-12-14,List price before account discounts. Synthetic demo data.
+Valley Foods,BUT-UN-454G,Unsalted butter,454 g,block,5.95,2026-11-14,2026-12-14,List price before account discounts. Synthetic demo data.
+Valley Foods,CRM-35-1L,Whipping cream 35%,1 L,carton,4.65,2026-11-14,2026-12-14,List price before account discounts. Synthetic demo data.
+Valley Foods,YST-ID-500G,Instant dry yeast,500 g,pack,6.75,2026-11-14,2026-12-14,List price before account discounts. Synthetic demo data.

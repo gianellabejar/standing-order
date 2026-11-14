@@ -1,11 +1,11 @@
 {
   "_recorded": "real deepseek response, 2026-11-14, model via DEEPSEEK_MODEL",
   "_usage": {
-    "prompt": 390,
-    "completion": 287
+    "prompt": 384,
+    "completion": 226
   },
   "response": {
-    "supplier_name": "Birchway Wholesale - Supplier B",
+    "supplier_name": "Valley Foods",
     "quotes": [
       {
         "sku": "SUG-GR-2KG",
@@ -26,6 +26,6 @@
         "page": 1
       }
     ],
-    "notes": "Synthetic demo data. Updated prices replace earlier list for these items; issued 2026-11-14. Prices are in CAD per unit before any account discount. Phone orders welcome."
+    "notes": "Synthetic demo data. Prices are updated prices replacing the earlier list for these items, issued 2026-11-14 and valid until 2026-12-14. Prices are in CAD per unit, before any account discount."
   }
 }

@@ -8,10 +8,14 @@
     "phone_env": null,
     "phone_default": null,
     "names": [
-      "Alder Mill"
+      "Alder Mill",
+      "Gianella's Ingredients",
+      "Gianella’s Ingredients",
+      "Gianellas Ingredients"
     ],
     "domains": [
-      "alder-mill.example"
+      "alder-mill.example",
+      "gianellas-ingredients.example"
     ]
   },
   {
@@ -23,10 +27,12 @@
     "phone_env": "SUPPLIER_B_PHONE",
     "phone_default": "+15550100099",
     "names": [
-      "Birchway"
+      "Birchway",
+      "Valley Foods"
     ],
     "domains": [
-      "birchway.example"
+      "birchway.example",
+      "valleyfoods.example"
     ]
   }
 ]

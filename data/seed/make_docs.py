@@ -25,9 +25,9 @@ def make_pdf(cat: dict, issued: date, path: Path, prices_key: str = "supplier_b"
              heading: str = "List price catalogue.") -> None:
     valid = issued + timedelta(days=cat["valid_days"])
     c = canvas.Canvas(str(path), pagesize=LETTER, invariant=1)  # invariant: same bytes for same input
-    c.setTitle("Birchway Wholesale price list (synthetic)")
+    c.setTitle("Valley Foods price list (synthetic)")
     y = 740
-    for line, size in [("Birchway Wholesale - Supplier B (SYNTHETIC DEMO DATA)", 14),
+    for line, size in [("Valley Foods (SYNTHETIC DEMO DATA)", 14),
                        (f"{heading} Issued {issued.isoformat()}. Valid until {valid.isoformat()}.", 10),
                        ("Prices in CAD per unit, before any account discount. Phone orders welcome.", 10)]:
         c.setFont("Helvetica-Bold" if size > 10 else "Helvetica", size)
@@ -52,13 +52,13 @@ def make_eml(cat: dict, issued: date, path: Path) -> None:
     rows = "\n".join(f"  {sku:<12} {cat['skus'][sku]['name']:<30} ${p:.2f} per {cat['skus'][sku]['unit']}"
                      for sku, p in cat["supplier_a"].items())
     m = EmailMessage()
-    m["From"] = "Alder Mill Supply <quotes@alder-mill.example>"
+    m["From"] = "Gianella's Ingredients <quotes@gianellas-ingredients.example>"
     m["To"] = "orders-inbox@orderdesk.example"
     m["Subject"] = "Updated price quote (synthetic demo data)"
     m["Date"] = format_datetime(datetime.combine(issued, time(9, 0), tzinfo=timezone.utc))
-    m["Message-ID"] = f"<quote-{issued.isoformat()}@alder-mill.example>"
+    m["Message-ID"] = f"<quote-{issued.isoformat()}@gianellas-ingredients.example>"
     m.set_content(f"Hi,\n\nHere are our current prices (CAD), valid until {valid.isoformat()}:\n\n{rows}\n\n"
-                  "Order by replying to this email.\n\nAlder Mill Supply - Supplier A\n"
+                  "Phone orders welcome.\n\nGianella's Ingredients\n"
                   "(This is synthetic data for a hackathon demo.)\n")
     path.write_bytes(bytes(m))
 

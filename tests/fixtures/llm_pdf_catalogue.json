@@ -1,11 +1,11 @@
 {
   "_recorded": "real deepseek response, 2026-11-14, model via DEEPSEEK_MODEL",
   "_usage": {
-    "prompt": 406,
-    "completion": 437
+    "prompt": 400,
+    "completion": 251
   },
   "response": {
-    "supplier_name": "Birchway Wholesale - Supplier B",
+    "supplier_name": "Valley Foods",
     "quotes": [
       {
         "sku": "FLR-AP-2KG",
@@ -35,6 +35,6 @@
         "page": 1
       }
     ],
-    "notes": "Synthetic demo data. List price catalogue issued 2026-11-14. Prices are in CAD per unit, before any account discount."
+    "notes": "Synthetic demo data. List price catalogue issued 2026-11-14; prices are in CAD per unit, before any account discount."
   }
 }

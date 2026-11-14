@@ -1,11 +1,11 @@
 {
   "_recorded": "real deepseek response, 2026-11-14, model via DEEPSEEK_MODEL",
   "_usage": {
-    "prompt": 381,
-    "completion": 364
+    "prompt": 375,
+    "completion": 271
   },
   "response": {
-    "supplier_name": "Alder Mill Supply - Supplier A",
+    "supplier_name": "Gianella's Ingredients",
     "quotes": [
       {
         "sku": "FLR-AP-2KG",
@@ -35,6 +35,6 @@
         "page": null
       }
     ],
-    "notes": "Prices stated as CAD and valid until 2026-12-14. Order by replying to the email. Document notes it is synthetic data for a hackathon demo."
+    "notes": "Prices are stated in CAD and valid until 2026-12-14. Phone orders welcome. Document notes it is synthetic data for a hackathon demo."
   }
 }
