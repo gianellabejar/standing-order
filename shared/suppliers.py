@@ -21,3 +21,17 @@ def get_supplier(supplier_id: str) -> dict:
 
 def all_suppliers() -> list[dict]:
     return [get_supplier(i) for i in _all()]
+
+
+PRODUCTS_FILE = Path(__file__).resolve().parent / "products.json"
+
+
+@lru_cache
+def products() -> dict[str, dict]:
+    """sku -> {name, unit, short}. Synthetic catalogue names, deployed with the app."""
+    return json.loads(PRODUCTS_FILE.read_text(encoding="utf-8"))
+
+
+def product_name(sku: str, short: bool = False) -> str:
+    p = products().get(sku)
+    return (p["short"] if short else p["name"]) if p else sku

@@ -13,6 +13,8 @@ from agent.orders.parse import Correction, Item, ParsedText
 from agent.sessions.manager import SessionManager
 from agent.voice import MockVoiceProvider
 from scripts.seed import seed as seedmod
+
+SEEDED_ORDERS = ["ord_seed_maple_oats", "ord_seed_maple_prev"]  # scripts/seed/demo_orders.py
 from shared.db import get_db
 from shared.models import OrderStatus
 
@@ -81,7 +83,7 @@ def test_yes_places_the_call_with_the_memory_brief_and_confirmed_only_with_a_num
     new = [x for x in r.orders.list(M) if x.status == OrderStatus.calling][0]
     brief = r.calls.get_by_conversation(M, new.call_id).brief
     assert (brief["contact_name"], brief["po_number"], brief["quantity"], brief["price"], brief["item"]) == \
-        ("Dave", "MB-0001", 40, 3.2, "flour")
+        ("Dave", "MB-0003", 40, 3.2, "flour")  # MB-0001/0002 are the seeded orders
     assert sent == []                                                                  # nothing texted until the call ends
     from agent.fixtures import post_call_payload
     out = prov.parse_post_call(post_call_payload("confirmed", new.call_id, brief))   # what the webhook would deliver
@@ -89,7 +91,7 @@ def test_yes_places_the_call_with_the_memory_brief_and_confirmed_only_with_a_num
     body = F.notify_outcome(r, M, new.id, send=lambda t, to, b: sent.append((t, to, b)))
     done = r.orders.get(M, new.id)
     assert done.status == OrderStatus.confirmed and done.confirmation_number == "MB-48213"
-    assert "Confirmation number MB-48213" in body and "PO MB-0001" in body and "$3.20" in body
+    assert "Confirmation number MB-48213" in body and "PO MB-0003" in body and "$3.20" in body
     assert sent and sent[0][0] == M and sent[0][1] == r.tenants.get(M).phones[0]
 
 
@@ -112,11 +114,14 @@ def test_price_correction_supersedes_the_quote_and_the_add_uses_the_new_price(wo
 
 def test_question_and_unclear_requests_create_no_order(world):
     flow, r, *_ = world
-    assert "SEED-0001" in say(flow, "What did we pay for flour last time?") and "wasn't recorded" in say(flow, "What did we pay for flour last time?", sid="SM2")
+    reply = say(flow, "What did we pay for flour last time?")
+    assert "MB-48213" in reply and "$3.20" in reply          # the seeded prior order has its number and price
+    r.orders.update_fields(M, "ord_seed_maple_prev", unit_price=None)
+    assert "wasn't recorded" in say(flow, "What did we pay for flour last time?", sid="SM2")
     assert "don't have a current price for 'quinoa'" in say(flow, "Need 5 bags of quinoa", sid="SM3")
     assert "don't have a current price for 'quinoa'" in say(flow, "Need 5 bags of quinoa please", sid="SM5")
     assert "place orders" in say(flow, "hello", sid="SM4")
-    assert [o.id for o in r.orders.list(M)] == ["ord_seed_maple_prev"]
+    assert sorted(o.id for o in r.orders.list(M)) == SEEDED_ORDERS
 
 
 def test_forgetting_the_discount_changes_the_next_decision_and_leaves_a_tombstone(world):
@@ -144,7 +149,7 @@ def test_yes_without_a_pending_order_does_not_place_anything(world):
         say(flow, "YES", sid="SM2")
     finally:
         del SCRIPT["YES"]
-    assert prov.pending == {} and [o.id for o in r.orders.list(M)] == ["ord_seed_maple_prev"]
+    assert prov.pending == {} and sorted(o.id for o in r.orders.list(M)) == SEEDED_ORDERS
 
 
 def test_second_business_sees_nothing_of_the_first(world):

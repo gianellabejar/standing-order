@@ -283,19 +283,31 @@ def drop_app_database(db=None) -> str:
 
 
 def ensure_indexes(db=None) -> None:
-    """Idempotent: safe to call on every startup and after a reset."""
+    """Idempotent: safe to call on every startup and after a reset. One create_indexes call per collection,
+    run in parallel: each call is a network round trip to Atlas, and these are independent."""
+    from concurrent.futures import ThreadPoolExecutor
+    from pymongo import IndexModel
     db = db if db is not None else _db()
     if "memories" not in db.list_collection_names():
-        db.create_collection("memories")  # the search index needs it; create_index creates the rest
-    db.orders.create_index([("tenant_id", ASCENDING), ("idempotency_key", ASCENDING)], unique=True)
-    db.memories.create_index("purge_at", expireAfterSeconds=0)  # TTL
-    for c in ("memories", "price_quotes", "sessions", "documents", "calls", "audit_events", "users"):
-        db[c].create_index("tenant_id")
-    db.tenants.create_index("phones")
-    db.tenants.create_index("emails")
-    db.documents.create_index([("tenant_id", ASCENDING), ("sha256", ASCENDING)], unique=True)
-    if any(i["name"] == VECTOR_INDEX for i in db.memories.list_search_indexes()):
-        return
-    db.memories.create_search_index(SearchIndexModel(name=VECTOR_INDEX, type="vectorSearch", definition={
-        "fields": [{"type": "vector", "path": "embedding", "numDimensions": EMBED_DIM, "similarity": "cosine"},
-                   *({"type": "filter", "path": p} for p in ("tenant_id", "status", "expires_at"))]}))
+        db.create_collection("memories")  # the search index needs it; create_indexes creates the rest
+    tid = IndexModel("tenant_id")
+    plan = {
+        "orders": [IndexModel([("tenant_id", ASCENDING), ("idempotency_key", ASCENDING)], unique=True)],
+        "memories": [tid, IndexModel("purge_at", expireAfterSeconds=0)],  # TTL
+        "documents": [tid, IndexModel([("tenant_id", ASCENDING), ("sha256", ASCENDING)], unique=True)],
+        "tenants": [IndexModel("phones"), IndexModel("emails")],
+        "users": [tid, IndexModel("email", unique=True)],  # one login per address
+        **{c: [tid] for c in ("price_quotes", "sessions", "calls", "audit_events")},
+    }
+
+    def vector_index() -> None:
+        if any(i["name"] == VECTOR_INDEX for i in db.memories.list_search_indexes()):
+            return
+        db.memories.create_search_index(SearchIndexModel(name=VECTOR_INDEX, type="vectorSearch", definition={
+            "fields": [{"type": "vector", "path": "embedding", "numDimensions": EMBED_DIM, "similarity": "cosine"},
+                       *({"type": "filter", "path": p} for p in ("tenant_id", "status", "expires_at"))]}))
+
+    with ThreadPoolExecutor(max_workers=len(plan) + 1) as pool:
+        jobs = [pool.submit(db[c].create_indexes, models) for c, models in plan.items()] + [pool.submit(vector_index)]
+        for j in jobs:
+            j.result()  # re-raise any failure

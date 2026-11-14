@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Register · Standing Order{% endblock %}
+{% block content %}
+<div class="authbox">
+  <p class="label">Owner dashboard</p>
+  <h1>Register your business</h1>
+  <p class="lede">Each business has its own orders and memory. Nothing is shared between businesses.</p>
+  {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/register">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="field"><span>Business name</span>
+      <input type="text" name="business" value="{{ form.business }}" maxlength="80" autocomplete="organization" required></label>
+    <label class="field"><span>Email</span>
+      <input type="email" name="email" value="{{ form.email }}" autocomplete="email" required>
+      <small>Also the address you forward supplier emails from.</small></label>
+    <label class="field"><span>Owner mobile (optional)</span>
+      <input type="tel" name="phone" value="{{ form.phone }}" placeholder="+14165550123" autocomplete="tel">
+      <small>Texts from this number reach your business.</small></label>
+    <label class="field"><span>Password</span>
+      <input type="password" name="password" minlength="8" autocomplete="new-password" required>
+      <small>At least 8 characters.</small></label>
+    <button class="btn primary" type="submit">Create account</button>
+  </form>
+  <p class="alt muted">Already registered? <a href="/login">Log in</a></p>
+</div>
+{% endblock %}

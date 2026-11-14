@@ -1,0 +1,22 @@
+{
+  "FLR-AP-2KG": {
+    "name": "All-purpose flour, 2 kg bag",
+    "unit": "bag",
+    "short": "flour"
+  },
+  "OAT-RL-1KG": {
+    "name": "Rolled oats, 1 kg bag",
+    "unit": "bag",
+    "short": "oats"
+  },
+  "SUG-GR-2KG": {
+    "name": "Granulated sugar, 2 kg bag",
+    "unit": "bag",
+    "short": "sugar"
+  },
+  "BUT-UN-454G": {
+    "name": "Unsalted butter, 454 g block",
+    "unit": "block",
+    "short": "butter"
+  }
+}

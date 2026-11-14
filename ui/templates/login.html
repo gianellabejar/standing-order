@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Log in · Standing Order{% endblock %}
+{% block content %}
+<div class="authbox">
+  <p class="label">Owner dashboard</p>
+  <h1>Log in</h1>
+  <p class="lede">See every order, the memory behind it, and fix or forget any of it.</p>
+  {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/login">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="field"><span>Email</span>
+      <input type="email" name="email" value="{{ email }}" autocomplete="email" required></label>
+    <label class="field"><span>Password</span>
+      <input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn primary" type="submit">Log in</button>
+  </form>
+  <p class="alt muted">New here? <a href="/register">Register your business</a></p>
+</div>
+{% endblock %}

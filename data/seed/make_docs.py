@@ -16,7 +16,9 @@ OUT = SEED.parent / "generated"
 
 
 def load() -> dict:
-    return json.loads((SEED / "catalogue.json").read_text(encoding="utf-8"))
+    cat = json.loads((SEED / "catalogue.json").read_text(encoding="utf-8"))
+    cat["skus"] = json.loads((SEED.parent.parent / "shared" / "products.json").read_text(encoding="utf-8"))
+    return cat
 
 
 def make_pdf(cat: dict, issued: date, path: Path, prices_key: str = "supplier_b",

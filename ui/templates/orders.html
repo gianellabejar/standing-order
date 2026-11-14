@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Orders · Standing Order{% endblock %}
+{% block who %}
+<div class="who">
+  {% if p.tenant.seeded %}<span class="sample">Sample data</span>{% endif %}
+  <span>Signed in as <strong>{{ p.tenant.name }}</strong></span>
+  <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="linkbtn" type="submit">Sign out</button></form>
+</div>
+{% endblock %}
+{% block content %}
+{% set sel = p.selected %}
+{% if notice %}<p class="notice" role="status">{{ notice }}</p>{% endif %}
+
+<div class="title">
+  <p class="label">Orders</p>
+  <h1>Every order, with its reasons.</h1>
+  <p class="lede">Texts in, supplier calls out. Each order shows the memory that shaped it, and you can correct or forget any of it.</p>
+</div>
+
+<div class="tiles">
+  <div class="tile needs">
+    <p class="label">Needs you</p>
+    <p class="big">{{ p.tiles.needs }}</p>
+    <p class="sub">Orders waiting on your reply or a confirmation number.</p>
+  </div>
+  <div class="tile">
+    <p class="label">Confirmed</p>
+    <p class="big">{{ p.tiles.confirmed }}</p>
+    <p class="sub">Each with a confirmation number from the supplier.</p>
+  </div>
+  <div class="tile">
+    <p class="label">Used memory</p>
+    <p class="big">{{ p.tiles.used }} of {{ p.tiles.total }}</p>
+    <p class="sub">Orders that used at least one memory.</p>
+  </div>
+</div>
+
+<section aria-labelledby="recent">
+  <h2 class="section" id="recent">Recent orders</h2>
+  {% if p.orders %}
+  <div class="tablebox">
+    <table>
+      <thead><tr><th scope="col">PO</th><th scope="col">Item</th><th scope="col">Supplier</th><th scope="col">Channel</th>
+        <th scope="col">Status</th><th scope="col" class="num">Total</th></tr></thead>
+      <tbody>
+      {% for o in p.orders %}
+        {% set key = v.order_key(o) %}
+        {% set href = "/?" ~ ({"order": key}|urlencode) ~ "#detail" %}
+        {% set chip = v.status_chip(o) %}
+        <tr{% if key == sel_key %} class="sel"{% endif %}>
+          <td><a href="{{ href }}"{% if key == sel_key %} aria-current="true"{% endif %}>{{ o.po_number or "No PO yet" }}</a></td>
+          <td><a href="{{ href }}" tabindex="-1" aria-hidden="true">{{ v.item_label(o) }}</a></td>
+          <td><a href="{{ href }}" tabindex="-1" aria-hidden="true">{{ v.supplier_label(o.supplier_id) }}</a></td>
+          <td><a href="{{ href }}" tabindex="-1" aria-hidden="true">{{ v.channel_label(o) }}</a></td>
+          <td><a href="{{ href }}" tabindex="-1" aria-hidden="true"><span class="chip {{ chip[1] }}">{{ chip[0] }}</span></a></td>
+          <td class="num"><a href="{{ href }}" tabindex="-1" aria-hidden="true">{{ v.money(o.total) if o.total is not none else "Not set" }}</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No orders yet. Text the shop number to place one.</p>
+  {% endif %}
+  <p class="note">An order only shows Confirmed once a confirmation number was captured. A call that ended without one stays Needs you.</p>
+</section>
+
+{% if sel %}
+{% set confirmed = v.status_chip(sel)[0] == "Confirmed" %}
+{% set back = {"order": sel_key} %}
+<section class="detail" id="detail" aria-labelledby="detail-h">
+  <p class="label">Order {{ sel.po_number or "(no PO number yet)" }}</p>
+  <h2 id="detail-h">{{ v.item_label(sel) }} from {{ v.supplier_label(sel.supplier_id) }}</h2>
+  <p class="muted" style="margin-top:8px">{{ v.local_date(sel.created_at) }}{% if sel.request_text %} · “{{ sel.request_text }}”{% endif %}</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="confirm">
+        <p class="k">Confirmation number</p>
+        {% if confirmed %}
+          <p class="n">{{ sel.confirmation_number }}</p>
+          <p class="s">Captured from the call transcript.</p>
+        {% else %}
+          <p class="n">No confirmation number yet</p>
+          <p class="s">{% if sel.needs_owner_reason %}{{ sel.needs_owner_reason|replace("_", " ")|capitalize }}.{% elif sel.status.value == "planned" %}Waiting for your YES before the supplier is contacted.{% elif sel.status.value == "calling" %}The call is in progress.{% else %}Not captured.{% endif %}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <h3>What was ordered</h3>
+        <dl class="kv">
+          <div><dt>Item</dt><dd>{{ v.item_label(sel) }}</dd></div>
+          <div><dt>Supplier</dt><dd>{{ v.supplier_label(sel.supplier_id) }}, by {{ "phone" if v.channel_label(sel) == "Call" else "email" }}</dd></div>
+          <div><dt>Price</dt><dd>{% if sel.unit_price is not none %}{{ v.money(sel.unit_price) }} per {{ (sel.items[0].unit if sel.items else "unit") }}{% else %}Not set{% endif %}</dd></div>
+          <div><dt>Total</dt><dd>{{ v.money(sel.total) if sel.total is not none else "Not set" }}</dd></div>
+          <div><dt>Delivery</dt><dd>{{ sel.delivery or "Not set" }}</dd></div>
+        </dl>
+      </div>
+
+      <div>
+        {% if p.call %}
+          {% if show_transcript %}
+            <a class="btn primary" href="/?{{ back|urlencode }}#detail" aria-expanded="true">Hide call transcript</a>
+          {% else %}
+            <a class="btn primary" href="/?{{ dict(back, transcript='1')|urlencode }}#transcript" aria-expanded="false">View call transcript</a>
+          {% endif %}
+        {% else %}
+          <button class="btn primary" type="button" disabled>View call transcript</button>
+          <p class="muted small" style="margin-top:8px">No call has been placed for this order yet.</p>
+        {% endif %}
+      </div>
+
+      {% if p.call and show_transcript %}
+      <div class="transcript" id="transcript">
+        <p class="muted small">{% if p.call.provider == "mock" %}Simulated call (mock voice provider): no real phone call was placed.{% else %}Call via {{ p.call.provider or "voice provider" }}.{% endif %}</p>
+        {% for turn in p.call.transcript %}
+          <p><span class="speaker">{{ "AI assistant" if turn.role == "agent" else "Supplier" }}</span>{{ turn.message }}</p>
+        {% else %}
+          <p class="muted">The transcript is empty.</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% set tok = sel.tokens.values()|sum if sel.tokens else 0 %}
+      {% if tok %}<p class="tokens">Tokens used for this order: {{ tok }}</p>{% endif %}
+    </div>
+
+    <div class="card">
+      <div>
+        <h3>Memory receipt</h3>
+        <p class="muted" style="margin-top:8px">The memories this order used, where each came from, and the controls to fix or drop it.</p>
+      </div>
+      <div>
+      {% for m in p.receipt %}
+        <div class="mem" id="mem-{{ m.id }}">
+          {% if m.state == "retracted" %}
+            <p class="t gone">Forgotten. The content was deleted; an audit entry was kept.</p>
+          {% elif m.state == "purged" %}
+            <p class="t gone">Purged after its grace period.</p>
+          {% else %}
+            <p class="t">{{ m.text }}</p>
+          {% endif %}
+          <p class="m">{{ m.id }}{% if m.seeded %} · Seeded{% endif %} · {{ m.state }}</p>
+          {% if m.corrected_to %}<p class="m">Corrected to: “{{ m.corrected_to }}”</p>{% endif %}
+
+          {% if correcting == m.id and m.actionable %}
+            <form class="ask" method="post" action="/memories/{{ m.id }}/correct">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <input type="hidden" name="order" value="{{ sel_key }}">
+              <label class="field" style="margin-top:0"><span>Corrected memory</span>
+                <textarea name="text" maxlength="500" required>{{ m.text }}</textarea></label>
+              {% if m.value_key %}
+              <label class="field"><span>Value the agent uses ({{ m.value_key|replace("_", " ") }})</span>
+                <input type="text" name="value" value="{{ m.value }}" required>
+                <small>Change this too, or the agent keeps using the old value.</small></label>
+              {% endif %}
+              <div class="btnrow">
+                <button class="btn primary" type="submit">Save correction</button>
+                <a class="btn" href="/?{{ back|urlencode }}#mem-{{ m.id }}">Cancel</a>
+              </div>
+            </form>
+          {% elif forgetting == m.id and m.forgettable %}
+            <form class="ask" method="post" action="/memories/{{ m.id }}/forget">
+              <input type="hidden" name="csrf" value="{{ csrf }}">
+              <input type="hidden" name="order" value="{{ sel_key }}">
+              <p>Forget this memory? This removes it and leaves an audit entry.</p>
+              <div class="btnrow">
+                <button class="btn rust" type="submit">Confirm</button>
+                <a class="btn" href="/?{{ back|urlencode }}#mem-{{ m.id }}">Cancel</a>
+              </div>
+            </form>
+          {% elif m.state not in ("retracted", "purged") %}
+            <div class="btnrow">
+              {% if m.actionable %}
+              <a class="btn" href="/?{{ dict(back, correct=m.id)|urlencode }}#mem-{{ m.id }}">Correct</a>
+              <form method="post" action="/memories/{{ m.id }}/expire">
+                <input type="hidden" name="csrf" value="{{ csrf }}">
+                <input type="hidden" name="order" value="{{ sel_key }}">
+                <button class="btn" type="submit">Expire</button>
+              </form>
+              {% endif %}
+              <a class="btn rust" href="/?{{ dict(back, forget=m.id)|urlencode }}#mem-{{ m.id }}">Forget</a>
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <p class="muted">This order did not use any memory.</p>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="plain" aria-labelledby="prices">
+  <h2 class="section" id="prices">Latest supplier prices</h2>
+  {% if p.quotes %}
+  <div class="tablebox">
+    <table>
+      <thead><tr><th scope="col">Supplier</th><th scope="col">Item</th><th scope="col">Price</th><th scope="col">Valid until</th><th scope="col">Source document</th></tr></thead>
+      <tbody>
+      {% for q in p.quotes %}
+        <tr><td>{{ q.supplier }}</td><td>{{ q.item }}</td><td>{{ q.price }}</td><td>{{ q.valid_until }}</td><td>{{ q.source }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No valid supplier prices yet. Forward a supplier's price email or PDF to get started.</p>
+  {% endif %}
+</section>
+
+<section class="plain" aria-labelledby="setup">
+  <h2 class="section" id="setup">Your setup</h2>
+  <div class="setup">
+    <p><span class="muted">Owner phone:</span> <strong>{{ p.setup.phones|join(", ") if p.setup.phones else "Not set" }}</strong></p>
+    <p><span class="muted">Forward supplier emails to:</span> <strong>{{ p.setup.inbox or "Not configured" }}</strong>{% if p.setup.owner_emails %} <span class="muted">from</span> <strong>{{ p.setup.owner_emails|join(", ") }}</strong>{% endif %}</p>
+  </div>
+</section>
+{% endblock %}

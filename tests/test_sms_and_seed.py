@@ -30,7 +30,8 @@ MAPLE_PHONE = "+15550100001"
 
 @pytest.fixture(scope="module")
 def db():
-    for k in ("OWNER_PHONE_MAPLE", "OWNER_PHONE_HARBOUR", "TWILIO_AUTH_TOKEN", "PUBLIC_BASE_URL"):
+    for k in ("OWNER_PHONE_MAPLE", "OWNER_PHONE_HARBOUR", "TWILIO_AUTH_TOKEN", "PUBLIC_BASE_URL",
+              "DASHBOARD_SEED_PASSWORD"):
         os.environ.pop(k, None)
     dbm._db.cache_clear()
     d = dbm._db()
@@ -51,7 +52,8 @@ def client(db):
 
 def test_reset_is_fast_and_complete(db):
     assert db.seed_seconds < 10, db.seed_seconds
-    assert db.seed_counts == {"tenants": 2, "documents": 4, "price_quotes": 12, "memories": 7, "orders": 1}
+    assert db.seed_counts == {"tenants": 2, "documents": 4, "price_quotes": 12, "memories": 7, "orders": 2,
+                              "calls": 2, "audit_events": 2, "users": 0}
     assert all(m.seeded for m in dbm.Memories(db).list("maple"))
 
 

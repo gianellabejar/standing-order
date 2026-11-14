@@ -11,7 +11,16 @@ Everything under `data/` is made up for the hackathon demo. The businesses, supp
 | `seed/owner_texts.json` | 8 prepared owner texts for the simulator (`python scripts/sms_sim.py --list`) |
 | `seed/make_docs.py` | Writes, dated today: `generated/supplier_b_catalogue.pdf` (text PDF, seeded), `generated/supplier_a_quote.eml` (seeded), `generated/supplier_b_update.pdf` (new sugar and butter prices, NOT seeded: forward it live in the demo) and `generated/supplier_b_scanned.pdf` (no text layer, to show the agent refuses to guess) |
 
-The seed also writes one prior Maple order (`ord_seed_maple_prev`, 40 bags of flour from B) so that "same as last time" has something to resolve. It is seeded, not a real past order.
+The seed also writes two Maple orders (`seeded: true`), produced by the real decision and ledger code with a **mock** voice provider (no real call is placed; the transcript is the mock fixture). See `scripts/seed/demo_orders.py`:
+
+| Order | What happened |
+|---|---|
+| `ord_seed_maple_prev`, MB-0001 | 40 bags of flour, Supplier B at $3.20 (8% memory). Mock call confirmed, number MB-48213 from the transcript. "Same as last time" resolves to it |
+| `ord_seed_maple_oats`, MB-0002 | 10 bags of oats, Supplier B. Mock call ended without a number, so Needs you |
+
+The next real order the agent places gets PO MB-0003.
+
+Dashboard logins: the two owner emails, with the password in `DASHBOARD_SEED_PASSWORD`.
 
 Flour numbers: A $3.45, B list $3.48. With the seeded "8% off" memory B costs $3.20 and wins. Without it, A wins.
 
