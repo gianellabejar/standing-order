@@ -123,4 +123,5 @@ class AuditEvent(Doc):
     actor: Literal["code", "agent", "owner"]
     event: str
     ids: list[str] = []
+    detail: dict[str, Any] = {}     # small event payload, e.g. an SMS body; never a forgotten memory's text
     tombstone: Optional[dict[str, Any]] = None
