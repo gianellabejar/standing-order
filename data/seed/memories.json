@@ -1,0 +1,23 @@
+[
+  {"id": "mem_maple_b_discount", "tenant": "maple", "kind": "terms",
+   "text": "Supplier B gives Maple Bakery 8% off list.",
+   "structured": {"supplier": "supplier_b", "key": "discount_pct", "value": 8}},
+  {"id": "mem_maple_b_channel", "tenant": "maple", "kind": "supplier_pref",
+   "text": "Supplier B takes orders by phone.",
+   "structured": {"supplier": "supplier_b", "key": "order_channel", "value": "phone"}},
+  {"id": "mem_maple_b_contact", "tenant": "maple", "kind": "supplier_pref",
+   "text": "When calling Supplier B, ask for Dave.",
+   "structured": {"supplier": "supplier_b", "key": "contact_name", "value": "Dave"}},
+  {"id": "mem_maple_b_po_format", "tenant": "maple", "kind": "supplier_pref",
+   "text": "Supplier B wants PO numbers in the format MB-0000 (MB- then 4 digits).",
+   "structured": {"supplier": "supplier_b", "key": "po_format", "value": "MB-{:04d}"}},
+  {"id": "mem_maple_flour_alias", "tenant": "maple", "kind": "alias",
+   "text": "When Maple Bakery says 'flour' it means FLR-AP-2KG (all-purpose flour, 2 kg bag).",
+   "structured": {"supplier": null, "key": "alias:flour", "value": "FLR-AP-2KG"}},
+  {"id": "mem_maple_approval", "tenant": "maple", "kind": "policy",
+   "text": "Orders above $100 need the owner's YES by text before they are placed.",
+   "structured": {"supplier": null, "key": "approval_threshold", "value": 100}},
+  {"id": "mem_harbour_a_delivery", "tenant": "harbour", "kind": "supplier_pref",
+   "text": "Supplier A delivers to Harbour Cafe on Tuesdays.",
+   "structured": {"supplier": "supplier_a", "key": "delivery_day", "value": "Tue"}}
+]

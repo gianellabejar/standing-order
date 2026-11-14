@@ -7,3 +7,7 @@ python-dotenv
 fastapi
 uvicorn
 mongomock
+python-multipart
+twilio
+reportlab
+pypdf

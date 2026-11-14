@@ -4,8 +4,8 @@ because the tenant is not known yet at SMS routing and login; nothing else may b
 import os
 from datetime import timedelta
 from functools import lru_cache
+from typing import List, Optional, Sequence
 from uuid import uuid4
-from typing import Optional
 
 from pymongo import ASCENDING, MongoClient
 from pymongo.operations import SearchIndexModel
@@ -48,9 +48,17 @@ class _Repo:
 
     def insert(self, tenant_id: str, obj) -> str:
         d = obj.model_dump(by_alias=True, exclude_none=True)
-        d["tenant_id"] = tenant_id
+        d["tenant_id"] = self._q(tenant_id)["tenant_id"]
         d.setdefault("_id", uuid4().hex)  # string ids, so get(tenant_id, id) round-trips
         return str(self._c.insert_one(d).inserted_id)
+
+    def insert_many(self, tenant_id: str, objs: Sequence) -> List[str]:  # `list` here = the method above
+        """One round trip. Every document is stamped with this tenant_id."""
+        tid = self._q(tenant_id)["tenant_id"]
+        docs = [{**o.model_dump(by_alias=True, exclude_none=True), "tenant_id": tid} for o in objs]
+        for d in docs:
+            d.setdefault("_id", uuid4().hex)
+        return list(self._c.insert_many(docs).inserted_ids) if docs else []
 
 
 class Tenants(_Repo):
@@ -60,10 +68,9 @@ class Tenants(_Repo):
         d = self._c.find_one({"_id": self._q(tenant_id)["tenant_id"]})
         return Tenant(**d) if d else None
 
-    def insert(self, tenant_id: str, obj) -> str:
-        d = obj.model_dump(by_alias=True, exclude_none=True)
-        d["_id"] = tenant_id
-        return str(self._c.insert_one(d).inserted_id)
+    def insert(self, tenant_id: str, obj: Tenant) -> str:
+        obj.id = self._q(tenant_id)["tenant_id"]  # a tenant's _id IS its tenant_id
+        return super().insert(tenant_id, obj)
 
     def resolve_by_phone(self, phone: str) -> Optional[Tenant]:
         """UNSCOPED by necessity: inbound SMS routing. Returns only the tenant record."""
@@ -163,13 +170,33 @@ class AuditEvents(_Repo):
     name, model = "audit_events", AuditEvent
 
 
-def ensure_indexes(db=None) -> None:
+COLLECTIONS = ("tenants", "users", "sessions", "memories", "price_quotes", "documents", "orders",
+               "calls", "audit_events")
+_PROTECTED_DBS = {"admin", "local", "config"}
+
+
+def drop_app_database(db=None) -> str:
+    """DEV/DEMO ONLY (make reset). Drops the whole app database, including LangGraph checkpoints.
+    Refuses system databases and anything not named like ours."""
     db = db if db is not None else _db()
+    if db.name in _PROTECTED_DBS or not db.name.startswith("orderdesk"):
+        raise RuntimeError(f"refusing to drop database {db.name!r}")
+    db.client.drop_database(db.name)
+    return db.name
+
+
+def ensure_indexes(db=None) -> None:
+    """Idempotent: safe to call on every startup and after a reset."""
+    db = db if db is not None else _db()
+    if "memories" not in db.list_collection_names():
+        db.create_collection("memories")  # the search index needs it; create_index creates the rest
     db.orders.create_index([("tenant_id", ASCENDING), ("idempotency_key", ASCENDING)], unique=True)
     db.memories.create_index("purge_at", expireAfterSeconds=0)  # TTL
     for c in ("memories", "price_quotes", "sessions", "documents", "calls", "audit_events", "users"):
         db[c].create_index("tenant_id")
     db.tenants.create_index("phones")
+    if any(i["name"] == VECTOR_INDEX for i in db.memories.list_search_indexes()):
+        return
     db.memories.create_search_index(SearchIndexModel(name=VECTOR_INDEX, type="vectorSearch", definition={
         "fields": [{"type": "vector", "path": "embedding", "numDimensions": EMBED_DIM, "similarity": "cosine"},
                    *({"type": "filter", "path": p} for p in ("tenant_id", "status", "expires_at"))]}))

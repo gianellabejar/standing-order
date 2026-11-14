@@ -1,0 +1,10 @@
+[
+  {"n": 1, "tenant": "maple", "text": "Need 40 bags of flour for Friday, same as last time.", "beat": "order; B wins only because of the 8% memory"},
+  {"n": 2, "tenant": "maple", "text": "YES", "beat": "approval (order is above the $100 threshold)"},
+  {"n": 3, "tenant": "maple", "text": "Oats from B are $2.80 now", "beat": "price correction; old quote superseded, history kept"},
+  {"n": 4, "tenant": "maple", "text": "Add 10 bags of oats to Friday's order", "beat": "uses the corrected oats price"},
+  {"n": 5, "tenant": "maple", "text": "Same as last time", "beat": "resolves from the last order"},
+  {"n": 6, "tenant": "maple", "text": "What did we pay for flour last time?", "beat": "question, no order"},
+  {"n": 7, "tenant": "maple", "text": "Forget that B gives us a discount", "beat": "forget; tombstone in audit_events"},
+  {"n": 8, "tenant": "harbour", "text": "Need 40 bags of flour for Friday, same as last time.", "beat": "leak test; Harbour sees nothing of Maple's"}
+]

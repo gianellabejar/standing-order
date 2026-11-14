@@ -13,10 +13,17 @@ Twilio sends `application/x-www-form-urlencoded`. The simulator posts the same s
 | `Body` | owner text |
 | `NumMedia` | ignored |
 
-`X-Twilio-Signature` is validated with the Twilio SDK when `TWILIO_AUTH_TOKEN` is set (the simulator skips it).
+`X-Twilio-Signature` is validated with the Twilio SDK when `TWILIO_AUTH_TOKEN` is set.
 
-Response: `200`, `Content-Type: text/xml`, body `<Response><Message>reply</Message></Response>`. An empty `<Response/>` sends nothing; later messages (approval, outcome) are sent through the Twilio REST API.
+`X-Twilio-Signature` is checked against `PUBLIC_BASE_URL + /sms/inbound` when `PUBLIC_BASE_URL` is set (tunnels and proxies change the URL the app sees), else against the request URL. `scripts/sms_sim.py` signs its requests the same way, so the simulator also works with the token set. Bad signature: `403`.
+
+Response: `200`, `Content-Type: text/xml`, body `<Response><Message>reply</Message></Response>`. An empty `<Response/>` sends nothing; later messages (approval, outcome) go through `ingest.sms.send_sms(tenant_id, to, body)` (Twilio REST; logged only when `SMS_DRY_RUN=1` or Twilio creds are missing).
 Unknown `From` returns an empty `<Response/>` and writes no data.
+
+Handling (implemented in `ingest/sms.py`):
+1. Each accepted message writes `audit_events` `{_id: "sms:<MessageSid>", event: "sms.inbound", detail: {from, body}}`. A retried `MessageSid` hits the duplicate `_id` and gets an empty `<Response/>`.
+2. The text goes to `shared.interfaces.handle_owner_text(tenant_id, text, message_sid) -> str | None` (the agent's entry point). Until the agent implements it, a fixed "not connected yet" reply is sent. It must answer within a few seconds (Twilio's webhook timeout is 15 s).
+3. Outbound messages write `audit_events` `{event: "sms.outbound", detail: {to, body, sent}}`.
 
 ## ElevenLabs outbound call
 `POST https://api.elevenlabs.io/v1/convai/twilio/outbound-call` (header `xi-api-key`). Confirm the base URL for your account's data residency.
@@ -56,4 +63,7 @@ Fields we rely on:
 An order is `confirmed` only if the extracted outcome has a confirmation number.
 
 ## Env vars
-See `.env.example`: MONGODB_URI, MONGODB_DB, DEEPSEEK_API_KEY, FALLBACK_LLM_API_KEY, VOYAGE_API_KEY (voyage-3.5, 1024 dims), TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, ELEVENLABS_API_KEY, ELEVENLABS_AGENT_ID, ELEVENLABS_PHONE_NUMBER_ID, ELEVENLABS_WEBHOOK_SECRET, SUPPLIER_B_PHONE, IMAP_HOST, IMAP_USER, IMAP_PASSWORD, SESSION_SECRET, PUBLIC_BASE_URL.
+See `.env.example`: MONGODB_URI, MONGODB_DB, DEEPSEEK_API_KEY, FALLBACK_LLM_API_KEY, VOYAGE_API_KEY (voyage-3.5, 1024 dims), TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, ELEVENLABS_API_KEY, ELEVENLABS_AGENT_ID, ELEVENLABS_PHONE_NUMBER_ID, ELEVENLABS_WEBHOOK_SECRET, SUPPLIER_B_PHONE, OWNER_PHONE_MAPLE, OWNER_PHONE_HARBOUR (team phones; fake +1555 numbers if unset), SMS_DRY_RUN, IMAP_HOST, IMAP_USER, IMAP_PASSWORD, SESSION_SECRET, PUBLIC_BASE_URL.
+
+## Seed data ids (stable across resets)
+Tenants `maple`, `harbour` (a tenant's `_id` is its `tenant_id`). Suppliers `supplier_a`, `supplier_b` (`shared/suppliers.py`; B's phone from `SUPPLIER_B_PHONE`). Flour SKU `FLR-AP-2KG`. Quotes `q_<tenant>_<supplier>_<sku>`, documents `doc_<tenant>_<supplier>_<pdf|email>`, memories `mem_*` (see `data/seed/memories.json`), prior order `ord_seed_maple_prev`. Records inserted without an id get a uuid4 hex string `_id`.

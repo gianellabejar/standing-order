@@ -37,6 +37,13 @@ class VoiceProvider(Protocol):
         """Turn a post-call webhook payload into a CallOutcome."""
 
 
+def handle_owner_text(tenant_id: str, text: str, message_sid: str) -> Optional[str]:
+    """Entry point from /sms/inbound (real Twilio or the simulator) into the agent. Returns the short
+    reply sent back as TwiML, or None for no immediate reply. Must return within a few seconds
+    (Twilio times out at 15 s); slow work replies later via ingest.sms.send_sms."""
+    raise NotImplementedError
+
+
 def parse_owner_text(tenant_id: str, text: str) -> ParsedOrder:
     """One structured LLM call (Pydantic-validated) turning an owner SMS into items, quantities,
     deadline and the 'same as last time' flag. Logs prompt/completion tokens."""
