@@ -184,3 +184,21 @@ def test_real_no_answer_response_maps_to_needs_owner():
     import json
     out = parse_post_call_payload(json.load(open("fixtures/real_no_answer.json")))
     assert (out.status, out.confirmation_number) == ("needs_owner", None) and "no_answer" in out.needs_owner_reason
+
+
+def test_inline_delivery_posts_after_call_record_exists(env, monkeypatch):
+    """Serverless mode: no Timer thread; the payload is delivered inside start_call, after the call is saved."""
+    db, repos, _, client = env
+    monkeypatch.setenv("MOCK_VOICE_DELIVERY", "inline")
+    prov = MockVoiceProvider(delay=1.0, post=lambda p: client.post("/voice/post-call", json=p))
+    o = planned(repos)
+    ledger.start_call(A, o.id, dict(BRIEF), repos, provider=prov)
+    assert repos.orders.get(A, o.id).status == OrderStatus.confirmed and prov.pending == {}
+
+
+def test_combined_app_serves_sms_and_voice_routes():
+    import app as root
+    c = TestClient(root.app)
+    assert c.get("/healthz").status_code == 200
+    assert c.post("/sms/inbound", data={}).status_code != 404   # exists (rejects the empty request)
+    assert c.post("/voice/post-call", json={}).status_code != 404

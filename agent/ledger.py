@@ -44,6 +44,8 @@ def start_call(tenant_id: str, order_id: str, context: dict, repos: Repos, provi
     repos.calls.insert(tenant_id, Call(tenant_id=tenant_id, conversation_id=call_id, order_id=order_id,
                                        brief=context, provider=provider.name))
     repos.orders.set_status(tenant_id, order_id, OrderStatus.calling, call_id=call_id)
+    if hasattr(provider, "after_start"):
+        provider.after_start(call_id)  # mock only: delivers the simulated post-call payload
     return call_id
 
 

@@ -1,22 +1,22 @@
 import json
 import logging
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 
 from agent import ledger
 from agent.voice import get_provider
 from shared.db import get_db
 
-app = FastAPI(title="Order Desk Agent")
+router = APIRouter()
 log = logging.getLogger("voice")
 
 
-@app.get("/health")
+@router.get("/health")
 def health():
     return {"ok": True, "voice_provider": get_provider().name}
 
 
-@app.post("/voice/post-call")
+@router.post("/voice/post-call")
 async def post_call(request: Request, db=Depends(get_db)):
     provider = get_provider()
     raw = await request.body()
@@ -41,3 +41,7 @@ async def post_call(request: Request, db=Depends(get_db)):
         raise HTTPException(404, str(e))
     log.warning("provider=%s order=%s status=%s", provider.name, order.id, order.status.value)
     return {"provider": provider.name, "order_id": order.id, "status": order.status.value}
+
+
+app = FastAPI(title="Order Desk Agent")
+app.include_router(router)

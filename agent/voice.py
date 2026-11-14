@@ -75,9 +75,18 @@ class MockVoiceProvider:
         self.pending[call_id] = post_call_payload(self.scenario, call_id, context)
         log.warning("provider=mock SIMULATED call %s for order %s (scenario=%s); no real call is placed",
                     call_id, order.id, self.scenario)
-        if self.delay is not None:  # delay=None: tests deliver by hand
-            threading.Timer(self.delay, self.deliver, [call_id]).start()
         return call_id
+
+    def after_start(self, call_id: str) -> None:
+        """Called by the ledger once the call record is saved. delay=None: tests deliver by hand.
+        MOCK_VOICE_DELIVERY=inline (the default on Vercel, where a Timer thread would be frozen after the
+        response) posts the payload right away, before start_call returns."""
+        if self.delay is None:
+            return
+        if os.environ.get("MOCK_VOICE_DELIVERY") == "inline" or os.environ.get("VERCEL"):
+            self.deliver(call_id)
+        else:
+            threading.Timer(self.delay, self.deliver, [call_id]).start()
 
     def deliver(self, call_id: str) -> None:
         self.post(self.pending.pop(call_id))
