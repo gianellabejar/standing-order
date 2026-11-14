@@ -15,6 +15,7 @@ from agent.orders.parse import parse_text
 from agent.orders.resolve import alias_map, best_memory_match, resolve_items
 from agent.sessions.manager import SessionManager
 from shared.interfaces import Decision
+from shared.suppliers import match_supplier, supplier_label
 from shared.models import AuditEvent, Order, OrderStatus, PriceQuote, Source, now
 
 log = logging.getLogger("orders")
@@ -24,7 +25,7 @@ DEFAULT_THRESHOLD = 100.0
 
 
 def label(supplier_id: str) -> str:
-    return "Supplier " + supplier_id.split("_")[-1].upper()
+    return supplier_label(supplier_id)
 
 
 def _money(x: float) -> str:
@@ -150,10 +151,9 @@ class OrderFlow:
         c, r = parsed.correction, self.r
         if not c or not c.sku or not c.new_price or c.new_price <= 0 or not c.supplier:
             return "Which item, which supplier, and what's the new price?"
-        norm = lambda x: re.sub(r"[^a-z0-9]", "", x.lower())  # "Supplier B", "supplier_b", "B" all name the same one
-        hint = norm(c.supplier)
-        cands = [q for q in r.quotes.list_valid(tenant_id, c.sku)
-                 if hint in (norm(q.supplier_id), norm(q.supplier_id.split("_")[-1]))]
+        quotes = r.quotes.list_valid(tenant_id, c.sku)  # "B", "supplier_b", "Gianella's" all name the same supplier
+        named = set(match_supplier(c.supplier, sorted({q.supplier_id for q in quotes})))
+        cands = [q for q in quotes if q.supplier_id in named]
         if len(cands) != 1:
             return "I couldn't tell which supplier's price that is. Which one?"
         old = cands[0]
