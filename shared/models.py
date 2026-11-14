@@ -1,0 +1,124 @@
+"""Pydantic models matching the collections in CLAUDE.md section 4."""
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any, Literal, Optional
+
+from pydantic import BaseModel, Field
+
+
+def now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+# "No expiry" is stored as a far-future date: $vectorSearch filters with $gt would skip nulls.
+NEVER = datetime(9999, 12, 31, tzinfo=timezone.utc)
+
+
+class Doc(BaseModel):
+    """Base for tenant-owned records. `id` maps to Mongo `_id` (string)."""
+    id: Optional[str] = Field(default=None, alias="_id")
+    tenant_id: str
+    model_config = {"populate_by_name": True}
+
+
+class Tenant(BaseModel):
+    id: Optional[str] = Field(default=None, alias="_id")
+    name: str
+    phones: list[str] = []          # owner phone numbers (E.164); inbound SMS routes on these
+    prefs: dict[str, Any] = {}      # e.g. approval_threshold, forwarding_address
+    profile: str = ""               # fixed ~150-token profile for the context pack
+
+
+class User(Doc):
+    email: str
+    password_hash: str              # bcrypt
+
+
+class Session(Doc):
+    thread_id: str
+    started_at: datetime = Field(default_factory=now)
+    closed_at: Optional[datetime] = None
+    summary: Optional[str] = None   # <= 150 tokens
+    embedding: Optional[list[float]] = None
+    tokens: dict[str, int] = {}     # {"prompt": n, "completion": n}
+
+
+class Source(BaseModel):
+    type: Literal["sms", "email", "pdf", "call", "session"]
+    ref: str
+
+
+class MemoryStatus(str, Enum):
+    active = "active"
+    superseded = "superseded"
+    retracted = "retracted"
+
+
+class Memory(Doc):
+    kind: str
+    text: str                       # emptied on forget
+    structured: dict[str, Any] = {}  # supplier, key, value
+    source: Source                  # no source, no memory
+    status: MemoryStatus = MemoryStatus.active
+    supersedes: Optional[str] = None
+    confidence: float = 1.0
+    created_at: datetime = Field(default_factory=now)
+    expires_at: datetime = NEVER
+    purge_at: Optional[datetime] = None  # TTL index hard-deletes after this
+    seeded: bool = False            # disclosed in README and demo
+    embedding: Optional[list[float]] = None
+    last_used_at: Optional[datetime] = None
+
+
+class PriceQuote(Doc):
+    supplier_id: str
+    sku: str
+    unit: str
+    price: float
+    valid_until: datetime
+    source: dict[str, Any]          # {"document_id": ..., "page": ...}
+    status: str = "active"          # active | superseded
+
+
+class Document(Doc):
+    kind: Literal["email", "pdf"]
+    ref: str
+    sha256: str
+    received_at: datetime = Field(default_factory=now)
+
+
+class OrderStatus(str, Enum):
+    planned = "planned"
+    calling = "calling"
+    confirmed = "confirmed"         # only with a captured confirmation number
+    needs_owner = "needs_owner"
+    failed = "failed"
+
+
+class Order(Doc):
+    status: OrderStatus = OrderStatus.planned
+    idempotency_key: str            # unique
+    items: list[dict[str, Any]] = []
+    supplier_id: Optional[str] = None
+    memories_used: list[str] = []
+    quotes_used: list[str] = []
+    confirmation_number: Optional[str] = None
+    call_id: Optional[str] = None
+    tokens: dict[str, int] = {}
+    created_at: datetime = Field(default_factory=now)
+
+
+class Call(Doc):
+    conversation_id: str            # ElevenLabs
+    order_id: str
+    brief: dict[str, Any]
+    transcript: list[dict[str, Any]] = []
+    outcome: Optional[dict[str, Any]] = None
+
+
+class AuditEvent(Doc):
+    ts: datetime = Field(default_factory=now)
+    actor: Literal["code", "agent", "owner"]
+    event: str
+    ids: list[str] = []
+    tombstone: Optional[dict[str, Any]] = None
