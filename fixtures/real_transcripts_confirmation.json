@@ -1,0 +1,167 @@
+{
+  "_note": "REAL ElevenLabs post-call transcripts (2026-11-14), reduced to role + message; no phone numbers or ids. Synthetic shop and supplier. Before the fix, the 2nd and 3rd were recorded as call_ended_without_confirmation_number although the supplier gave the number.",
+  "calls": [
+    {
+      "expected_confirmation_number": "10092",
+      "case": "plain digits right after the question",
+      "transcript": [
+        {
+          "role": "agent",
+          "message": "Hi, this is an AI assistant calling on behalf of Sean's Bakery to place an order. This call is transcribed. Is this Gianella?"
+        },
+        {
+          "role": "user",
+          "message": "Yes, this is she."
+        },
+        {
+          "role": "agent",
+          "message": "[Friendly] Great, thank you. I would like to place an order for fifty units of milk at the agreed price of five dollars and sixty-six cents. The purchase order number is M B zero zero zero three. Can you confirm if you can fulfill this?"
+        },
+        {
+          "role": "user",
+          "message": "Yeah, that sounds... I can deliver it by Monday."
+        },
+        {
+          "role": "agent",
+          "message": "[Helpful] Monday delivery works perfectly. Could you please provide your order confirmation number for this purchase?"
+        },
+        {
+          "role": "user",
+          "message": "Yes, that will be 10092."
+        },
+        {
+          "role": "agent",
+          "message": "[Helpful] Thank you, I have that as one zero zero nine two. Is that correct?"
+        },
+        {
+          "role": "user",
+          "message": "Yes, that is correct."
+        },
+        {
+          "role": "agent",
+          "message": "[Friendly] Perfect, thank you so much for your help, Gianella. Have a wonderful day, goodbye."
+        },
+        {
+          "role": "agent",
+          "message": null
+        },
+        {
+          "role": "agent",
+          "message": null
+        }
+      ]
+    },
+    {
+      "expected_confirmation_number": "1234",
+      "case": "spoken as words: 'one, two, three, four'",
+      "transcript": [
+        {
+          "role": "agent",
+          "message": "Hi, this is an AI assistant calling on behalf of Sean's Bakery to place an order. This call is transcribed. Is this Gianella?"
+        },
+        {
+          "role": "user",
+          "message": "This call will be recorded. Sorry, can you start from the beginning? Okay."
+        },
+        {
+          "role": "agent",
+          "message": "[Friendly] Hello, I am an AI assistant calling on behalf of Sean's Bakery to place an order. May I please speak with Gianella, or someone who can help me place an order?"
+        },
+        {
+          "role": "user",
+          "message": "Yes, this is she."
+        },
+        {
+          "role": "agent",
+          "message": "[Friendly] Great, thank you Gianella. I would like to order ten units of milk at our agreed price of five dollars and sixty-six cents each. Our purchase order number is M B zero zero zero four. Can you confirm this order?"
+        },
+        {
+          "role": "user",
+          "message": "That may do. Yes, I've just put in the order and it will come in on Monday. Your order confirmation number is one, two, three, four."
+        },
+        {
+          "role": "agent",
+          "message": "[Helpful] Thank you. I have the delivery date as Monday, and the order confirmation number is one two three four. Is that correct?"
+        },
+        {
+          "role": "user",
+          "message": "Yes, that is."
+        },
+        {
+          "role": "agent",
+          "message": "Thank you so much for your help, Gianella. Have a wonderful day. Goodbye."
+        },
+        {
+          "role": "agent",
+          "message": null
+        },
+        {
+          "role": "agent",
+          "message": null
+        },
+        {
+          "role": "user",
+          "message": "You too. Bye."
+        }
+      ]
+    },
+    {
+      "expected_confirmation_number": "18876",
+      "case": "given two supplier turns after the question, after 'Uh, uh, uh-'",
+      "transcript": [
+        {
+          "role": "agent",
+          "message": "Hi, this is an AI assistant calling on behalf of Sean's Bakery to place an order. This call is transcribed. Is this Gianella?"
+        },
+        {
+          "role": "user",
+          "message": "Yes."
+        },
+        {
+          "role": "agent",
+          "message": "[Friendly] Great! I would like to place an order for twenty units of butter at our agreed price of five dollars and forty-seven cents each. The purchase order number is M B zero zero zero five. Can you confirm this order and let me know the delivery date?"
+        },
+        {
+          "role": "user",
+          "message": "Uh, yes, I can confirm. Uh, the delivery date should be next Friday."
+        },
+        {
+          "role": "agent",
+          "message": "[Friendly] Next Friday works perfectly. Could you please provide your order confirmation number for our records?"
+        },
+        {
+          "role": "user",
+          "message": "Uh, uh, uh-"
+        },
+        {
+          "role": "agent",
+          "message": "[Friendly]..."
+        },
+        {
+          "role": "user",
+          "message": "18876."
+        },
+        {
+          "role": "agent",
+          "message": "[Friendly] Thank you. I have that as one eight eight seven six. Is that correct?"
+        },
+        {
+          "role": "user",
+          "message": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "message": "[Friendly] Perfect. Thank you so much for your help, Gianella. Have a wonderful day! Goodbye."
+        },
+        {
+          "role": "agent",
+          "message": null
+        },
+        {
+          "role": "agent",
+          "message": null
+        }
+      ]
+    }
+  ]
+}

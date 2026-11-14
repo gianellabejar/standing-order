@@ -78,9 +78,9 @@ def apply_outcome(tenant_id: str, conversation_id: str, outcome: CallOutcome, re
     order = repos.orders.get(tenant_id, call.order_id)
     if call.outcome is not None:
         return order  # duplicate webhook: change nothing
+    from agent.voice import supplier_said
     number = outcome.confirmation_number
-    text = " ".join(t.get("message") or "" for t in outcome.transcript if t.get("role") == "user")
-    if outcome.status == "confirmed" and number and number in text:
+    if outcome.status == "confirmed" and number and supplier_said(outcome.transcript, number):
         status, fields = OrderStatus.confirmed, {"confirmation_number": number}
     else:
         reason = outcome.needs_owner_reason or "confirmation number not found in transcript"
