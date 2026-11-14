@@ -4,7 +4,7 @@ deterministic and cost no tokens. Set RUN_LLM_TESTS=1 to also run the live extra
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -199,8 +199,12 @@ def test_tenants_do_not_share_documents_or_quotes(db, docs, extractor):
 
 
 class FakeImap:
-    def __init__(self, messages: dict[int, bytes], uidvalidity: int = 7):
+    """Enough IMAP for the poller: UID SEARCH (ALL, UID n:*, SINCE date) and FETCH. `dates` holds each
+    message's received date (default today), like Gmail's INTERNALDATE."""
+
+    def __init__(self, messages: dict[int, bytes], uidvalidity: int = 7, dates=None):
         self.messages, self.untagged_responses = messages, {"UIDVALIDITY": [str(uidvalidity).encode()]}
+        self.dates = dict(dates or {})
         self.readonly, self.fetch_specs = None, []
 
     def select(self, mailbox, readonly=False):
@@ -210,8 +214,12 @@ class FakeImap:
     def uid(self, cmd, *args):
         if cmd == "SEARCH":
             crit = args[1]
+            if crit.startswith("SINCE"):
+                since = datetime.strptime(crit.split()[1], "%d-%b-%Y").date()
+                hits = [u for u in sorted(self.messages) if self.dates.get(u, date.today()) >= since]
+                return "OK", [" ".join(map(str, hits)).encode()]
             lo = int(crit.split()[1].split(":")[0]) if crit.startswith("UID") else 1
-            hits = [u for u in self.messages if u >= lo] or ([max(self.messages)] if self.messages else [])
+            hits = [u for u in sorted(self.messages) if u >= lo] or ([max(self.messages)] if self.messages else [])
             return "OK", [" ".join(map(str, hits)).encode()]
         uid, spec = int(args[0]), args[1]
         self.fetch_specs.append(spec)
@@ -221,32 +229,65 @@ class FakeImap:
         pass
 
 
-def test_poller_skips_existing_mail_then_ingests_new(db, docs, extractor, monkeypatch):
+def _fwd(sender, attachment, filename="b.pdf", maintype="application", subtype="pdf"):
+    m = EmailMessage()
+    m["From"], m["Subject"] = sender, "Fwd: prices"
+    m.set_content("From: orders@gianellas-ingredients.example\nsee attached")
+    m.add_attachment(attachment, maintype=maintype, subtype=subtype, filename=filename)
+    return bytes(m)
+
+
+def test_poller_backfills_recent_owner_mail_and_skips_old_mail(db, docs, extractor, monkeypatch):
     monkeypatch.setenv("IMAP_USER", "inbox@example.com")
-    def fwd(sender, attachment):
-        m = EmailMessage()
-        m["From"], m["Subject"] = sender, "Fwd: prices"
-        m.set_content("From: orders@gianellas-ingredients.example\nsee attached")
-        m.add_attachment(attachment, maintype="application", subtype="pdf", filename="b.pdf")
-        return bytes(m)
-    imap = FakeImap({1: b"From: old@example.com\n\nold mail", 2: b"From: old@example.com\n\nold mail 2"})
+    old = date.today() - timedelta(days=30)
+    imap = FakeImap({1: b"From: old@example.com\n\nold mail",
+                     2: _fwd(MAPLE_EMAIL, docs["pdf_update"]),                 # an owner's, but 30 days old
+                     3: _fwd(MAPLE_EMAIL, docs["pdf"]),                        # recent catalogue from Sean's Bakery
+                     4: b"From: no-reply@accounts.example\nSubject: Security alert\n\nhi"},
+                    dates={1: old, 2: old})
 
-    first = poller.poll_once(db, connect_fn=lambda: imap)
-    assert first == {"initialized": True, "skipped_existing": 2, "processed": []}
-    assert extractor.calls == 0
-
-    imap.messages[3] = fwd(MAPLE_EMAIL, docs["pdf"])
-    imap.messages[4] = fwd("stranger@example.com", docs["pdf_update"])
-    second = poller.poll_once(db, connect_fn=lambda: imap)
-    by_uid = {p["uid"]: p for p in second["processed"]}
+    first = poller.poll_once(db, connect_fn=lambda: imap)       # no watermark: read the last 7 days
+    assert first["initialized"] and first["skipped_existing"] == 2 and first["backfill_days"] == 7
+    by_uid = {p["uid"]: p for p in first["processed"]}
     assert set(by_uid) == {3, 4}
     assert by_uid[3]["result"] == "ingested" and by_uid[3]["tenant"] == "maple" and by_uid[3]["quotes"] == 3
     assert by_uid[4]["result"] == "unknown_sender"
+    assert extractor.calls == 1                                    # the old catalogue was not read
     assert imap.readonly is True and set(imap.fetch_specs) == {"(BODY.PEEK[])"}  # never marks mail read
 
-    third = poller.poll_once(db, connect_fn=lambda: imap)  # nothing new
-    assert third["processed"] == [] and extractor.calls == 1
-    assert dbm.IngestState(db).get("inbox@example.com/INBOX")["last_uid"] == 4
+    imap.messages[5] = _fwd(MAPLE_EMAIL, VALLEY_CSV, "valley_foods_catalogue.csv", "text", "csv")
+    second = poller.poll_once(db, connect_fn=lambda: imap)
+    assert [(p["uid"], p["result"], p["quotes"]) for p in second["processed"]] == [(5, "ingested", 6)]
+    third = poller.poll_once(db, connect_fn=lambda: imap)
+    assert third == {"initialized": False, "processed": []} and extractor.calls == 1   # CSV needs no LLM
+    assert dbm.IngestState(db).get("inbox@example.com/INBOX")["last_uid"] == 5
+    assert {q.supplier_id for q in dbm.PriceQuotes(db).list_valid("maple")} == {"supplier_a", "supplier_b"}
+
+
+def test_after_a_reset_the_poller_reloads_recent_catalogues(db, docs, extractor, monkeypatch):
+    monkeypatch.setenv("IMAP_USER", "inbox@example.com")
+    imap = FakeImap({1: _fwd(MAPLE_EMAIL, docs["pdf"])})
+    poller.poll_once(db, connect_fn=lambda: imap)
+    db.ingest_state.delete_many({})                                # watermark lost, documents kept
+    again = poller.poll_once(db, connect_fn=lambda: imap)
+    assert [p["result"] for p in again["processed"]] == ["duplicate"] and extractor.calls == 1  # parsed once
+    for c in ("ingest_state", "documents", "price_quotes"):        # a full reset
+        db[c].delete_many({})
+    reloaded = poller.poll_once(db, connect_fn=lambda: imap)
+    assert [(p["result"], p["quotes"]) for p in reloaded["processed"]] == [("ingested", 3)]
+    assert len(dbm.PriceQuotes(db).list_valid("maple")) == 3
+
+
+def test_backfill_zero_skips_everything_already_in_the_inbox(db, docs, extractor, monkeypatch):
+    monkeypatch.setenv("IMAP_USER", "inbox@example.com")
+    imap = FakeImap({1: _fwd(MAPLE_EMAIL, docs["pdf"])})
+    first = poller.poll_once(db, connect_fn=lambda: imap, backfill_days=0)
+    assert first == {"initialized": True, "skipped_existing": 1, "backfill_days": 0, "processed": []}
+    assert extractor.calls == 0
+
+
+def test_imap_date_does_not_depend_on_locale():
+    assert poller.imap_date(date(2026, 11, 7)) == "07-Nov-2026"
 
 
 def test_poll_route_requires_secret(monkeypatch):
@@ -275,8 +316,8 @@ def test_live_deepseek_extraction(db, docs, monkeypatch):
 
 
 def test_poller_output_is_readable():
-    assert poller.describe({"initialized": True, "skipped_existing": 3, "processed": []})[0].startswith(
-        "started fresh: skipped 3")
+    assert poller.describe({"initialized": True, "skipped_existing": 3, "backfill_days": 7, "processed": []}) == [
+        "no watermark yet: reading the last 7 day(s) of mail, skipped 3 older email(s)", "no new mail"]
     assert poller.describe({"initialized": False, "processed": []}) == ["no new mail"]
     lines = poller.describe({"initialized": False, "processed": [
         {"uid": 5, "tenant": "maple", "result": "ingested", "quotes": 2, "documents": ["d1", "d2"],
