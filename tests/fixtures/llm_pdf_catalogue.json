@@ -1,0 +1,40 @@
+{
+  "_recorded": "real deepseek response, 2026-11-14, model via DEEPSEEK_MODEL",
+  "_usage": {
+    "prompt": 406,
+    "completion": 437
+  },
+  "response": {
+    "supplier_name": "Birchway Wholesale - Supplier B",
+    "quotes": [
+      {
+        "sku": "FLR-AP-2KG",
+        "description": "All-purpose flour, 2 kg bag",
+        "unit": "bag",
+        "price": 3.48,
+        "currency": "CAD",
+        "valid_until": "2026-12-14",
+        "page": 1
+      },
+      {
+        "sku": "OAT-RL-1KG",
+        "description": "Rolled oats, 1 kg bag",
+        "unit": "bag",
+        "price": 3.1,
+        "currency": "CAD",
+        "valid_until": "2026-12-14",
+        "page": 1
+      },
+      {
+        "sku": "SUG-GR-2KG",
+        "description": "Granulated sugar, 2 kg bag",
+        "unit": "bag",
+        "price": 2.55,
+        "currency": "CAD",
+        "valid_until": "2026-12-14",
+        "page": 1
+      }
+    ],
+    "notes": "Synthetic demo data. List price catalogue issued 2026-11-14. Prices are in CAD per unit, before any account discount."
+  }
+}

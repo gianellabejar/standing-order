@@ -1,7 +1,0 @@
-[
-  {"id": "supplier_a", "name": "Alder Mill Supply (synthetic)", "short": "A",
-   "order_channel": "email", "email": "orders@alder-mill.example", "phone_env": null, "phone_default": null},
-  {"id": "supplier_b", "name": "Birchway Wholesale (synthetic)", "short": "B",
-   "order_channel": "phone", "email": "orders@birchway.example",
-   "phone_env": "SUPPLIER_B_PHONE", "phone_default": "+15550100099"}
-]

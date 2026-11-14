@@ -1,0 +1,40 @@
+{
+  "_recorded": "real deepseek response, 2026-11-14, model via DEEPSEEK_MODEL",
+  "_usage": {
+    "prompt": 381,
+    "completion": 364
+  },
+  "response": {
+    "supplier_name": "Alder Mill Supply - Supplier A",
+    "quotes": [
+      {
+        "sku": "FLR-AP-2KG",
+        "description": "All-purpose flour, 2 kg bag",
+        "unit": "bag",
+        "price": 3.45,
+        "currency": "CAD",
+        "valid_until": "2026-12-14",
+        "page": null
+      },
+      {
+        "sku": "OAT-RL-1KG",
+        "description": "Rolled oats, 1 kg bag",
+        "unit": "bag",
+        "price": 2.95,
+        "currency": "CAD",
+        "valid_until": "2026-12-14",
+        "page": null
+      },
+      {
+        "sku": "SUG-GR-2KG",
+        "description": "Granulated sugar, 2 kg bag",
+        "unit": "bag",
+        "price": 2.6,
+        "currency": "CAD",
+        "valid_until": "2026-12-14",
+        "page": null
+      }
+    ],
+    "notes": "Prices stated as CAD and valid until 2026-12-14. Order by replying to the email. Document notes it is synthetic data for a hackathon demo."
+  }
+}

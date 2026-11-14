@@ -1,5 +1,6 @@
 """Tenant B must never read tenant A's memories through any repository method."""
 import inspect
+import uuid
 import os
 
 import pytest
@@ -9,7 +10,7 @@ from shared import db as dbmod
 from shared.models import Memory, Source
 
 A, B = "maple", "harbour"
-UNSCOPED = {"resolve_by_phone", "resolve_by_email"}  # the only allowed tenant-less reads
+UNSCOPED = {"resolve_by_phone", "resolve_by_email", "resolve_by_owner_email"}  # the only allowed tenant-less reads
 SECRET = "Supplier B gives Maple Bakery 8% off list"
 
 
@@ -31,10 +32,11 @@ def mem():
     if not os.environ.get("MONGODB_URI"):
         pytest.skip("MONGODB_URI not set")
     client = MongoClient(os.environ["MONGODB_URI"])
-    db = client["orderdesk_test"]
+    name = f"orderdesk_test_{uuid.uuid4().hex[:8]}"  # per run: the sandbox is shared
+    db = client[name]
     repo = dbmod.Memories(db)
     yield repo
-    client.drop_database("orderdesk_test")
+    client.drop_database(name)
 
 
 def test_tenant_b_cannot_read_tenant_a_memories(mem):
