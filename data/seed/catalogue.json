@@ -1,0 +1,11 @@
+{
+  "_note": "Single source for the generated supplier documents. Synthetic prices. Flour: A 3.45, B list 3.48 (8% off = 3.20).",
+  "valid_days": 30,
+  "skus": {
+    "FLR-AP-2KG": {"name": "All-purpose flour, 2 kg bag", "unit": "bag"},
+    "OAT-RL-1KG": {"name": "Rolled oats, 1 kg bag", "unit": "bag"},
+    "SUG-GR-2KG": {"name": "Granulated sugar, 2 kg bag", "unit": "bag"}
+  },
+  "supplier_a": {"FLR-AP-2KG": 3.45, "OAT-RL-1KG": 2.95, "SUG-GR-2KG": 2.60},
+  "supplier_b": {"FLR-AP-2KG": 3.48, "OAT-RL-1KG": 3.10, "SUG-GR-2KG": 2.55}
+}
