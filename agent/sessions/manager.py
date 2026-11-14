@@ -9,12 +9,21 @@ from typing import Callable, Optional
 from agent.ledger import Repos
 from agent.memory.embed import Embedder
 from agent.memory.governance import Governance
+from agent.sessions.thread import record_turn
 from agent.sessions.summarize import CloseResult, clamp_summary, llm_close
 from shared.models import Session, Source, now
 
 log = logging.getLogger("sessions")
 IDLE = timedelta(minutes=30)
 Message = dict  # {"role": "owner"|"agent"|"supplier", "text": str, "source": {"type": ..., "ref": ...}}
+
+
+def for_app(repos: Optional[Repos] = None, embedder: Optional[Embedder] = None) -> "SessionManager":
+    """The production wiring: MongoDBSaver-backed thread per session, real LLM and embedder."""
+    from agent.sessions.thread import build_graph
+    saver = get_checkpointer()
+    return SessionManager(repos or Repos(), embedder=embedder, graph=build_graph(saver),
+                          messages_for=lambda t: messages_from_checkpoint(saver, t))
 
 
 def get_checkpointer():
@@ -29,16 +38,17 @@ def messages_from_checkpoint(saver, thread_id: str) -> list[Message]:
     tup = saver.get_tuple({"configurable": {"thread_id": thread_id, "checkpoint_ns": ""}})
     out = []
     for i, m in enumerate(((tup.checkpoint.get("channel_values") or {}).get("messages") or []) if tup else []):
-        role = {"human": "owner", "ai": "agent"}.get(getattr(m, "type", ""), "agent")
-        src = (getattr(m, "additional_kwargs", {}) or {}).get("source") or {"type": "session", "ref": f"{thread_id}#{i}"}
+        kw = getattr(m, "additional_kwargs", {}) or {}
+        role = kw.get("role") or {"human": "owner", "ai": "agent"}.get(getattr(m, "type", ""), "agent")
+        src = kw.get("source") or {"type": "session", "ref": f"{thread_id}#{i}"}
         out.append({"role": role, "text": str(m.content), "source": src})
     return out
 
 
 class SessionManager:
     def __init__(self, repos: Repos, llm: Callable = llm_close, embedder: Optional[Embedder] = None,
-                 messages_for: Optional[Callable[[str], list[Message]]] = None, idle: timedelta = IDLE):
-        self.r, self.llm, self.idle = repos, llm, idle
+                 messages_for: Optional[Callable[[str], list[Message]]] = None, idle: timedelta = IDLE, graph=None):
+        self.r, self.llm, self.idle, self.graph = repos, llm, idle, graph
         self.gov = Governance(repos, embedder)
         self.messages_for = messages_for or (lambda thread_id: [])
 
@@ -57,6 +67,13 @@ class SessionManager:
         else:
             self.r.sessions.touch(tenant_id, s.id, at)
         return s
+
+    def record(self, tenant_id: str, session: Session, role: str, text: str, source: Optional[dict] = None) -> None:
+        """Store one turn in the session's LangGraph thread (needs `graph=`) and mark the session active."""
+        if self.graph is None:
+            raise RuntimeError("SessionManager was built without a graph; pass graph=build_graph(saver)")
+        record_turn(self.graph, session.thread_id, role, text, source)
+        self.r.sessions.touch(tenant_id, session.id)
 
     def complete_task(self, tenant_id: str, session_id: str) -> str:
         """The task finished: close now instead of waiting for silence."""
