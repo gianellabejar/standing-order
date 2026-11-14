@@ -15,7 +15,7 @@ from shared.interfaces import CallOutcome
 from shared.models import Memory, Order, OrderStatus, PriceQuote, Source, now
 
 A, B = "maple", "harbour"
-BRIEF = {"shop_name": "Maple Bakery", "quantity": 40, "unit": "bag", "item": "flour", "price_to_confirm": 3.2}
+BRIEF = {"shop_name": "Maple Bakery", "quantity": 40, "unit": "bag", "item": "flour", "price": 3.2}
 
 
 @pytest.fixture
@@ -150,3 +150,30 @@ def test_expired_quote_ignored_and_memory_impact_counts(db):
                                  quotes_used=[q["ao"], q["bo"]]), repos)
     assert memory_impact(A, repos) == (1, 2)
     assert memory_impact(B, repos) == (0, 0)
+
+
+# ---- ElevenLabs provider (no network) ----
+def test_elevenlabs_refuses_numbers_outside_allowlist(monkeypatch):
+    from agent.voice import ElevenLabsVoiceProvider
+    monkeypatch.setenv("TEST_SUPPLIER_PHONE", "+15550000001")
+    monkeypatch.delenv("SUPPLIER_B_PHONE", raising=False)
+    with pytest.raises(ValueError):
+        ElevenLabsVoiceProvider().place_call(Order(tenant_id=A, idempotency_key="x"), {"to_number": "+15559999999"})
+
+
+def test_webhook_with_bad_signature_is_rejected(db, monkeypatch):
+    import agent.voice as v
+    monkeypatch.setattr(v, "_provider", v.ElevenLabsVoiceProvider())
+    monkeypatch.setenv("ELEVENLABS_WEBHOOK_SECRET", "s")
+    app.dependency_overrides[get_db] = lambda: db
+    try:
+        r = TestClient(app).post("/voice/post-call", json={}, headers={"elevenlabs-signature": "t=1,v0=bad"})
+        assert r.status_code == 401
+        assert TestClient(app).post("/voice/post-call", json={}).status_code == 401  # no header
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_parser_accepts_get_conversation_shape():
+    p = post_call_payload("confirmed", "c", BRIEF)["data"]  # GET response has these fields at top level
+    assert parse_post_call_payload(p).confirmation_number == "MB-48213"

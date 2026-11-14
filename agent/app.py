@@ -1,3 +1,4 @@
+import json
 import logging
 
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -17,9 +18,14 @@ def health():
 
 @app.post("/voice/post-call")
 async def post_call(request: Request, db=Depends(get_db)):
-    # TODO(real provider): verify the ElevenLabs HMAC signature before trusting the payload.
-    payload = await request.json()
     provider = get_provider()
+    raw = await request.body()
+    if hasattr(provider, "verify_webhook"):  # real provider only; the mock posts to itself unsigned
+        try:
+            provider.verify_webhook(raw, request.headers.get("elevenlabs-signature"))
+        except Exception as e:
+            raise HTTPException(401, f"webhook signature check failed: {type(e).__name__}")
+    payload = json.loads(raw)
     try:
         outcome = provider.parse_post_call(payload)
     except NotImplementedError as e:

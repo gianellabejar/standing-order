@@ -26,7 +26,7 @@ def _turn(role: str, message: str, t: int) -> dict:
 def post_call_payload(scenario: str, conversation_id: str, brief: dict) -> dict:
     agent_line = (f"Hello, this is an AI assistant calling on behalf of {brief.get('shop_name', 'the shop')}. "
                   f"This call is transcribed. I'd like to order {brief.get('quantity')} {brief.get('unit')}s of "
-                  f"{brief.get('item')} at {brief.get('price_to_confirm')} each. Can you confirm the order?")
+                  f"{brief.get('item')} at {brief.get('price')} each. Can you confirm the order?")
     transcript = [_turn("agent", agent_line, 0)]
     if SUPPLIER_REPLY[scenario]:
         transcript.append(_turn("user", SUPPLIER_REPLY[scenario], 9))

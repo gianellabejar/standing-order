@@ -29,6 +29,8 @@ def find_confirmation_number(transcript: list[dict]) -> Optional[str]:
 
 def parse_post_call_payload(payload: dict) -> CallOutcome:
     """Plain code, no LLM. Parses the ElevenLabs-shaped post-call payload (unverified against a real call)."""
+    if "data" not in payload and "transcript" in payload:  # GET /conversations/{id} response shape
+        payload = {"type": "post_call_transcription", "data": payload}
     if payload.get("type") != "post_call_transcription":
         return CallOutcome(status="needs_owner", transcript=[],
                            needs_owner_reason=f"unsupported webhook type {payload.get('type')!r}")
@@ -82,14 +84,41 @@ class MockVoiceProvider:
 
 
 class ElevenLabsVoiceProvider:
-    """TODO: not written until we have an API key. Endpoint and payload notes are in docs/contracts.md."""
+    """Outbound call through ElevenLabs Agents + the Twilio number imported there.
+    Docs: POST /v1/convai/twilio/outbound-call with conversation_initiation_client_data.dynamic_variables."""
     name = "elevenlabs"
+    BASE = "https://api.elevenlabs.io/v1/convai"  # confirm data-residency host for the account
+
+    def _allowed_numbers(self) -> set:
+        return {n for n in (os.environ.get("TEST_SUPPLIER_PHONE"), os.environ.get("SUPPLIER_B_PHONE")) if n}
 
     def place_call(self, order: Order, context: dict) -> str:
-        raise NotImplementedError("ElevenLabsVoiceProvider: waiting for an API key")
+        to = context.get("to_number") or os.environ.get("TEST_SUPPLIER_PHONE")
+        if to not in self._allowed_numbers():  # only ever call a teammate's verified phone
+            raise ValueError("refusing to call a number that is not TEST_SUPPLIER_PHONE or SUPPLIER_B_PHONE")
+        variables = {k: v for k, v in context.items()
+                     if k != "to_number" and (v is None or isinstance(v, (str, int, float, bool)))}
+        r = httpx.post(f"{self.BASE}/twilio/outbound-call", headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"]},
+                       json={"agent_id": os.environ["ELEVENLABS_AGENT_ID"],
+                             "agent_phone_number_id": os.environ["ELEVENLABS_PHONE_NUMBER_ID"],
+                             "to_number": to,
+                             "conversation_initiation_client_data": {"dynamic_variables": variables}}, timeout=30)
+        body = r.json() if r.content else {}
+        if r.status_code != 200 or not body.get("success", True) or not body.get("conversation_id"):
+            raise RuntimeError(f"outbound-call failed ({r.status_code}): {str(body)[:300]}")
+        log.warning("provider=elevenlabs REAL call placed, conversation_id=%s", body["conversation_id"])
+        return body["conversation_id"]
+
+    def verify_webhook(self, raw: bytes, sig_header: Optional[str]) -> None:
+        """HMAC check via the ElevenLabs SDK. Raises on a missing secret, missing header or bad signature."""
+        from elevenlabs.client import ElevenLabs
+        secret = os.environ.get("ELEVENLABS_WEBHOOK_SECRET")
+        if not secret or not sig_header:
+            raise PermissionError("webhook secret or signature header missing")
+        ElevenLabs(api_key="unused").webhooks.construct_event(raw.decode(), sig_header, secret)
 
     def parse_post_call(self, payload: dict) -> CallOutcome:
-        raise NotImplementedError("ElevenLabsVoiceProvider: waiting for an API key")
+        return parse_post_call_payload(payload)
 
 
 _provider = None
