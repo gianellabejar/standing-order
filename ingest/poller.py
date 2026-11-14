@@ -5,10 +5,13 @@
   POST/GET /ingest/poll              # one pass over HTTP (Vercel cron or a dashboard button)
 
 The mailbox is opened read-only and messages are fetched with BODY.PEEK, so nothing is marked read.
-A UID watermark in `ingest_state` records how far we got. On the very first run the watermark is set
-to the newest existing message, so mail that was already in the inbox is skipped, not ingested.
-Re-delivered bytes are also caught by the documents (tenant_id, sha256) unique index.
+A UID watermark in `ingest_state` records how far we got. With no watermark (first run, or after a
+`make reset` wiped the database) the poller BACKFILLS: it reads the mail of the last BACKFILL_DAYS days
+(default 7, `--backfill-days`), oldest first, and skips anything older. Only mail forwarded by a shop
+owner's address is ingested (it is filed under that shop); everything else is ignored and stores nothing.
+A document already parsed for that shop is recognised by its sha256 and not parsed again.
 """
+import datetime as dt
 import argparse
 import imaplib
 import logging
@@ -21,7 +24,14 @@ from shared import db as dbm
 
 log = logging.getLogger("ingest.poller")
 MAILBOX = "INBOX"
-MAX_PER_POLL = 20  # bound one pass so an HTTP-triggered poll stays short
+MAX_PER_POLL = 20  # bound one pass so an HTTP-triggered poll stays short; the rest is read next pass
+BACKFILL_DAYS = 7  # with no watermark, read this many days back (0 = skip everything already there)
+_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def imap_date(d: dt.date) -> str:
+    """IMAP SEARCH date (RFC 3501), e.g. 07-Nov-2026. Built by hand: strftime's %b follows the OS locale."""
+    return f"{d.day:02d}-{_MONTHS[d.month - 1]}-{d.year}"
 
 
 def connect() -> imaplib.IMAP4:
@@ -35,9 +45,11 @@ def _uids(m: imaplib.IMAP4, criteria: str) -> list[int]:
     return sorted(int(x) for x in (data[0] or b"").split()) if typ == "OK" else []
 
 
-def poll_once(db=None, connect_fn: Callable[[], imaplib.IMAP4] = connect) -> dict:
+def poll_once(db=None, connect_fn: Callable[[], imaplib.IMAP4] = connect,
+              backfill_days: Optional[int] = None) -> dict:
     state_repo = dbm.IngestState(db)
     key = f"{os.environ.get('IMAP_USER', 'inbox').lower()}/{MAILBOX}"
+    days = BACKFILL_DAYS if backfill_days is None else max(0, backfill_days)
     m = connect_fn()
     try:
         typ, _ = m.select(MAILBOX, readonly=True)
@@ -45,19 +57,25 @@ def poll_once(db=None, connect_fn: Callable[[], imaplib.IMAP4] = connect) -> dic
             raise RuntimeError(f"cannot select {MAILBOX}")
         uidvalidity = int((m.untagged_responses.get("UIDVALIDITY") or [b"0"])[0])
         state = state_repo.get(key)
-        if state.get("uidvalidity") != uidvalidity:  # first run, or the mailbox was rebuilt
+        summary = {"initialized": False, "processed": []}
+        if state.get("uidvalidity") != uidvalidity:  # first run, after a reset, or the mailbox was rebuilt
             existing = _uids(m, "ALL")
-            state_repo.set(key, uidvalidity=uidvalidity, last_uid=max(existing, default=0))
-            log.info("initialised watermark; skipped %d existing messages", len(existing))
-            return {"initialized": True, "skipped_existing": len(existing), "processed": []}
+            recent = _uids(m, f"SINCE {imap_date(dt.date.today() - dt.timedelta(days=days))}") if days else []
+            older = [u for u in existing if u < min(recent, default=max(existing, default=0) + 1)]
+            # Start just before the first recent message: older mail is skipped, recent mail is read below.
+            start = (min(recent) - 1) if recent else max(existing, default=0)
+            state_repo.set(key, uidvalidity=uidvalidity, last_uid=start)
+            state = {"uidvalidity": uidvalidity, "last_uid": start}
+            summary.update(initialized=True, skipped_existing=len(older), backfill_days=days)
+            log.info("no watermark: skipping %d older message(s), reading %d from the last %d day(s)",
+                     len(older), len(recent), days)
 
         last = state.get("last_uid", 0)
         new = [u for u in _uids(m, f"UID {last + 1}:*") if u > last][:MAX_PER_POLL]
-        processed = []
-        for uid in new:
-            processed.append(_process(m, uid, uidvalidity, db))
+        for uid in new:  # oldest first, so a newer catalogue supersedes an older one
+            summary["processed"].append(_process(m, uid, uidvalidity, db))
             state_repo.set(key, last_uid=uid)  # advance per message; a failed one is kept as a failed document
-        return {"initialized": False, "processed": processed}
+        return summary
     finally:
         try:
             m.logout()
@@ -88,12 +106,12 @@ def _process(m: imaplib.IMAP4, uid: int, uidvalidity: int, db) -> dict:
 
 def describe(summary: dict) -> list[str]:
     """One readable line per poll, plus one per processed email."""
-    if summary.get("initialized"):
-        return [f"started fresh: skipped {summary['skipped_existing']} email(s) already in the inbox; "
-                "forward new ones now"]
-    if not summary["processed"]:
-        return ["no new mail"]
     lines = []
+    if summary.get("initialized"):
+        lines.append(f"no watermark yet: reading the last {summary.get('backfill_days', 0)} day(s) of mail, "
+                     f"skipped {summary['skipped_existing']} older email(s)")
+    if not summary["processed"]:
+        return lines + ["no new mail"]
     for p in summary["processed"]:
         if p["result"] == "ingested":
             lines.append(f"email #{p['uid']} -> {p['tenant']}: {p['quotes']} quote(s); "
@@ -126,6 +144,9 @@ def main(argv: Optional[list[str]] = None) -> None:
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--interval", type=int, default=45, help="seconds between polls (30 to 60)")
     ap.add_argument("-v", "--verbose", action="store_true", help="also show ingest and LLM logs")
+    ap.add_argument("--backfill-days", type=int, default=BACKFILL_DAYS,
+                    help=f"with no watermark (first run, after a reset), read this many days back "
+                         f"(default {BACKFILL_DAYS}; 0 skips everything already in the inbox)")
     a = ap.parse_args(argv)
     if a.verbose:
         logging.getLogger("ingest").setLevel(logging.INFO)
@@ -137,7 +158,7 @@ def main(argv: Optional[list[str]] = None) -> None:
         while True:
             stamp = time.strftime("%H:%M:%S")
             try:
-                for line in describe(poll_once()):
+                for line in describe(poll_once(backfill_days=a.backfill_days)):
                     print(f"{stamp} {line}", flush=True)
             except Exception as e:  # keep the loop alive through a network blip
                 print(f"{stamp} poll failed: {type(e).__name__}: {e}", flush=True)
