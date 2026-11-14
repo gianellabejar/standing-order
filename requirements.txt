@@ -1,3 +1,6 @@
 pydantic
 pymongo
 pytest
+langchain-deepseek
+httpx
+python-dotenv
