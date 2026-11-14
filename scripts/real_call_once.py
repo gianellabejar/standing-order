@@ -1,4 +1,4 @@
-"""Places ONE real ElevenLabs call to TEST_SUPPLIER_PHONE, saves the fetched conversation to
+"""Places ONE real ElevenLabs call to SUPPLIER1_PHONE, saves the fetched conversation to
 fixtures/real_post_call.json and runs the confirmation rule on it. Aborts unless the agent's first
 message discloses transcription. Run: python scripts/real_call_once.py --yes"""
 import json

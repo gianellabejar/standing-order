@@ -23,6 +23,7 @@ load_dotenv(ROOT / ".env")
 
 from data.seed import make_docs  # noqa: E402
 from shared import db as dbm  # noqa: E402
+from shared.suppliers import env_first  # noqa: E402
 from shared.models import (AuditEvent, Document, Memory, PriceQuote, Source, Tenant, User)  # noqa: E402
 
 SEED = ROOT / "data" / "seed"
@@ -34,8 +35,8 @@ def load(name: str):
 
 
 def contacts(t: dict) -> tuple[str, str]:
-    phone = os.environ.get(t["phone_env"]) or t["phone_default"]
-    email = (os.environ.get(t["email_env"]) or t["email_default"]).strip().lower()
+    phone = env_first(t["phone_env"], t.get("phone_env_legacy")) or t["phone_default"]
+    email = (env_first(t["email_env"], t.get("email_env_legacy")) or t["email_default"]).strip().lower()
     return phone, email
 
 

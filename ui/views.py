@@ -37,7 +37,7 @@ def supplier_label(supplier_id: Optional[str]) -> str:
     if not supplier_id:
         return "No supplier yet"
     try:
-        return f"Supplier {get_supplier(supplier_id)['short']}"
+        return get_supplier(supplier_id)["label"]
     except KeyError:
         return supplier_id
 

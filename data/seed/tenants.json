@@ -1,22 +1,39 @@
 [
   {
     "id": "maple",
-    "name": "Maple Bakery",
-    "phone_env": "OWNER_PHONE_MAPLE",
+    "name": "Sean's Bakery",
+    "phone_env": "CLIENT1_PHONE",
     "phone_default": "+15550100001",
-    "email_env": "OWNER_EMAIL_MAPLE",
+    "email_env": "CLIENT1_EMAIL",
     "email_default": "owner@maple-bakery.example",
-    "prefs": {"approval_threshold": 100, "currency": "CAD", "delivery_days": ["Tue", "Fri"]},
-    "profile": "Maple Bakery is a small neighbourhood bakery (synthetic). Owner orders dry goods by text, usually for Friday delivery. Main items: all-purpose flour, rolled oats, granulated sugar. Two suppliers on file: Supplier A (quotes by email) and Supplier B (PDF catalogue, takes phone orders). Prefers the lowest landed price and short confirmations."
+    "prefs": {
+      "approval_threshold": 100,
+      "currency": "CAD",
+      "delivery_days": [
+        "Tue",
+        "Fri"
+      ]
+    },
+    "profile": "Sean's Bakery is a small neighbourhood bakery (synthetic). Owner orders dry goods by text, usually for Friday delivery. Main items: all-purpose flour, rolled oats, granulated sugar. Two suppliers on file: Valley Foods (quotes by email) and Gianella's Ingredients (PDF catalogue, takes phone orders). Prefers the lowest landed price and short confirmations.",
+    "phone_env_legacy": "OWNER_PHONE_MAPLE",
+    "email_env_legacy": "OWNER_EMAIL_MAPLE"
   },
   {
     "id": "harbour",
-    "name": "Harbour Cafe",
-    "phone_env": "OWNER_PHONE_HARBOUR",
+    "name": "Cerebral Cafe",
+    "phone_env": "CLIENT2_PHONE",
     "phone_default": "+15550100002",
-    "email_env": "OWNER_EMAIL_HARBOUR",
+    "email_env": "CLIENT2_EMAIL",
     "email_default": "owner@harbour-cafe.example",
-    "prefs": {"approval_threshold": 75, "currency": "CAD", "delivery_days": ["Tue"]},
-    "profile": "Harbour Cafe is a small waterfront cafe (synthetic). Owner orders baking supplies by text for Tuesday delivery. Uses the same two suppliers as other shops but has no negotiated terms on file."
+    "prefs": {
+      "approval_threshold": 75,
+      "currency": "CAD",
+      "delivery_days": [
+        "Tue"
+      ]
+    },
+    "profile": "Cerebral Cafe is a small neighbourhood cafe (synthetic). Owner orders baking supplies by text for Tuesday delivery. Uses the same two suppliers as other shops but has no negotiated terms on file.",
+    "phone_env_legacy": "OWNER_PHONE_HARBOUR",
+    "email_env_legacy": "OWNER_EMAIL_HARBOUR"
   }
 ]

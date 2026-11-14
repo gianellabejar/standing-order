@@ -1,7 +1,7 @@
 """Runs owner texts through the REAL order flow (real DeepSeek parse, real Atlas, real memory) and prints each reply.
 
   python scripts/order_demo.py --provider mock            # SIMULATED call, in-process, db orderdesk_test (reset + seed)
-  python scripts/order_demo.py --provider elevenlabs --yes  # REAL call to TEST_SUPPLIER_PHONE, db from .env, NO reset
+  python scripts/order_demo.py --provider elevenlabs --yes  # REAL call to SUPPLIER1_PHONE, db from .env, NO reset
 
 The mock never places a call. The real run needs the deployed app to include the flow (the webhook is handled there)."""
 import argparse
@@ -25,7 +25,7 @@ def main():
     ap.add_argument("--texts", nargs="*", help="override the owner texts (default: the order beats)")
     a = ap.parse_args()
     if a.provider == "elevenlabs" and not a.yes:
-        sys.exit("dry run: re-run with --yes to place a REAL call to TEST_SUPPLIER_PHONE")
+        sys.exit("dry run: re-run with --yes to place a REAL call to SUPPLIER1_PHONE")
     if a.provider == "mock":
         os.environ.update(MONGODB_DB="orderdesk_test", SMS_DRY_RUN="1", VOICE_PROVIDER="mock")
 
@@ -46,7 +46,7 @@ def main():
         prov = voice.MockVoiceProvider(delay=None, post=lambda p: client.post("/voice/post-call", json=p))
         voice._provider = prov
     else:
-        print("== REAL call via ElevenLabs to TEST_SUPPLIER_PHONE. db:", db.name)
+        print("== REAL call via ElevenLabs to SUPPLIER1_PHONE. db:", db.name)
         prov = voice.ElevenLabsVoiceProvider()
         voice._provider = prov
     repos = ledger.Repos(db)

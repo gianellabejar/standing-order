@@ -121,12 +121,13 @@ class ElevenLabsVoiceProvider:
     BASE = "https://api.elevenlabs.io/v1/convai"  # confirm data-residency host for the account
 
     def _allowed_numbers(self) -> set:
-        return {n for n in (os.environ.get("TEST_SUPPLIER_PHONE"), os.environ.get("SUPPLIER_B_PHONE")) if n}
+        return {n for n in (os.environ.get(k) for k in ("SUPPLIER1_PHONE", "TEST_SUPPLIER_PHONE", "SUPPLIER_B_PHONE")) if n}
 
     def place_call(self, order: Order, context: dict) -> str:
-        to = context.get("to_number") or os.environ.get("TEST_SUPPLIER_PHONE")
+        to = context.get("to_number") or next((os.environ[k] for k in ("SUPPLIER1_PHONE", "TEST_SUPPLIER_PHONE",
+                                                                       "SUPPLIER_B_PHONE") if os.environ.get(k)), None)
         if to not in self._allowed_numbers():  # only ever call a teammate's verified phone
-            raise ValueError("refusing to call a number that is not TEST_SUPPLIER_PHONE or SUPPLIER_B_PHONE")
+            raise ValueError("refusing to call a number that is not SUPPLIER1_PHONE (or the legacy TEST_SUPPLIER_PHONE / SUPPLIER_B_PHONE)")
         variables = {k: v for k, v in context.items()
                      if k != "to_number" and (v is None or isinstance(v, (str, int, float, bool)))}
         r = httpx.post(f"{self.BASE}/twilio/outbound-call", headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"]},

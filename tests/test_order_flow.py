@@ -26,8 +26,10 @@ SCRIPT = {  # owner text -> what the LLM call would return (stand-in)
     "Need 40 bags of flour for Friday, same as last time.": ParsedText(
         intent="order", items=[Item(name="flour", qty=40)], same_as_last_time=True, deadline="Friday"),
     "Same as last time": ParsedText(intent="order", same_as_last_time=True),
-    "Oats from Supplier B are $2.80 now": ParsedText(intent="price_correction",   # seen from the real model
-                                                     correction=Correction(sku=OATS, supplier="Supplier B", new_price=2.80)),
+    "Oats from Gianella's Ingredients are $2.80 now": ParsedText(intent="price_correction",   # seen from the real model
+                                                     correction=Correction(sku=OATS, supplier="Gianella's Ingredients", new_price=2.80)),
+    "Oats from Gianella's Ingredients are $2.80 now": ParsedText(intent="price_correction",
+                                                                  correction=Correction(sku=OATS, supplier="Gianella's Ingredients", new_price=2.80)),
     "Oats from B are $2.80 now": ParsedText(intent="price_correction",
                                             correction=Correction(sku=OATS, supplier="B", new_price=2.80)),
     "Add 10 bags of oats to Friday's order": ParsedText(intent="add_to_order", items=[Item(name="oats", sku=OATS, qty=10)]),
@@ -63,7 +65,7 @@ def say(flow, text, tenant=M, sid="SM1"):
 def test_order_text_is_priced_from_memory_and_needs_approval(world):
     flow, r, prov, sent, db = world
     reply = say(flow, "Need 40 bags of flour for Friday, same as last time.")
-    assert "Supplier B" in reply and "$3.20" in reply and "$128.00" in reply and "8%" in reply and "Reply YES" in reply
+    assert "Gianella's Ingredients" in reply and "$3.20" in reply and "$128.00" in reply and "8%" in reply and "Reply YES" in reply
     o = r.orders.awaiting_approval(M)
     assert o.status == OrderStatus.planned and o.supplier_id == "supplier_b" and (o.unit_price, o.total) == (3.20, 128.0)
     mem_keys = {r.memories.get(M, i).structured["key"] for i in o.memories_used}
@@ -79,11 +81,11 @@ def test_yes_places_the_call_with_the_memory_brief_and_confirmed_only_with_a_num
     flow, r, prov, sent, db = world
     say(flow, "Need 40 bags of flour for Friday, same as last time.")
     reply = say(flow, "YES", sid="SM2")
-    assert reply.startswith("Calling Supplier B")
+    assert reply.startswith("Calling Gianella's Ingredients")
     new = [x for x in r.orders.list(M) if x.status == OrderStatus.calling][0]
     brief = r.calls.get_by_conversation(M, new.call_id).brief
     assert (brief["contact_name"], brief["po_number"], brief["quantity"], brief["price"], brief["item"]) == \
-        ("Dave", "MB-0003", 40, 3.2, "flour")  # MB-0001/0002 are the seeded orders
+        ("Gianella", "MB-0003", 40, 3.2, "flour")  # MB-0001/0002 are the seeded orders
     assert sent == []                                                                  # nothing texted until the call ends
     from agent.fixtures import post_call_payload
     out = prov.parse_post_call(post_call_payload("confirmed", new.call_id, brief))   # what the webhook would deliver
@@ -126,7 +128,7 @@ def test_question_and_unclear_requests_create_no_order(world):
 
 def test_forgetting_the_discount_changes_the_next_decision_and_leaves_a_tombstone(world):
     flow, r, prov, sent, db = world
-    assert "Supplier B" in say(flow, "Need 40 bags of flour for Friday, same as last time.")
+    assert "Gianella's Ingredients" in say(flow, "Need 40 bags of flour for Friday, same as last time.")
     say(flow, "NO", sid="SM2")                                                          # owner declines the first one
     assert r.orders.awaiting_approval(M) is None
     assert say(flow, "Forget that B gives us a discount", sid="SM3") .startswith("Forgotten")
@@ -134,7 +136,7 @@ def test_forgetting_the_discount_changes_the_next_decision_and_leaves_a_tombston
     assert gone.text == "" and gone.status.value == "retracted"
     assert any(e.event == "memory.forget" and e.tombstone == {"memory_id": "mem_maple_b_discount"} for e in r.audit.list(M))
     reply = say(flow, "Same as last time", sid="SM4")
-    assert "Supplier A" in reply and "$3.45" in reply and "$138.00" in reply            # without the memory A wins
+    assert "Valley Foods" in reply and "$3.45" in reply and "$138.00" in reply            # without the memory A wins
     reply = say(flow, "YES", sid="SM5")
     a = [o for o in r.orders.list(M) if o.supplier_id == "supplier_a"][0]
     assert a.status == OrderStatus.needs_owner and "email ordering is not built" in a.needs_owner_reason
@@ -156,7 +158,7 @@ def test_second_business_sees_nothing_of_the_first(world):
     flow, r, prov, sent, db = world
     say(flow, "Need 40 bags of flour for Friday, same as last time.")
     reply = say(flow, "Same as last time", tenant=H, sid="SMH")
-    assert "What would you like" in reply and "Maple" not in reply and "Supplier B" not in reply and "$3.20" not in reply
+    assert "What would you like" in reply and "Maple" not in reply and "Gianella's Ingredients" not in reply and "$3.20" not in reply
     assert r.orders.list(H) == [] and r.orders.awaiting_approval(H) is None
     assert all(m.tenant_id == H and "Maple" not in m.text for m in r.memories.list_active(H))
 
@@ -221,7 +223,7 @@ def test_webhook_notifies_the_owner_once_even_if_delivered_twice(world, monkeypa
 
 def test_supplier_named_in_any_spelling_matches(world):
     flow, r, *_ = world
-    assert "$2.80" in say(flow, "Oats from Supplier B are $2.80 now")
+    assert "$2.80" in say(flow, "Oats from Gianella's Ingredients are $2.80 now")
 
 
 def test_multi_item_order_has_an_unambiguous_brief_and_no_misleading_unit_price(world):
@@ -234,3 +236,8 @@ def test_multi_item_order_has_an_unambiguous_brief_and_no_misleading_unit_price(
     b = r.calls.get_by_conversation(M, new.call_id).brief
     assert "40 bags of flour" in b["quantity"] and "10 bags of oats" in b["quantity"] and "flour and oats" in b["item"]
     assert "in total" in b["price"] and str(int(new.total)) in b["price"]
+
+
+def test_price_correction_by_the_suppliers_full_name(world):
+    flow, r, *_ = world
+    assert "$2.80" in say(flow, "Oats from Gianella's Ingredients are $2.80 now") and "Gianella's Ingredients" in say(flow, "Need 40 bags of flour for Friday, same as last time.", sid="SM2")

@@ -6,7 +6,7 @@ Entrypoint: root `app.py` (zero-config FastAPI). Python is pinned by `.python-ve
 ## Environment variables (Vercel dashboard, never in the repo)
 MONGODB_URI, MONGODB_DB, DEEPSEEK_API_KEY, DEEPSEEK_MODEL, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER,
 PUBLIC_BASE_URL (the deployed URL, no trailing slash), VOICE_PROVIDER (`mock` until a real call is verified),
-ELEVENLABS_API_KEY, ELEVENLABS_AGENT_ID, ELEVENLABS_PHONE_NUMBER_ID, ELEVENLABS_WEBHOOK_SECRET, TEST_SUPPLIER_PHONE,
+ELEVENLABS_API_KEY, ELEVENLABS_AGENT_ID, ELEVENLABS_PHONE_NUMBER_ID, ELEVENLABS_WEBHOOK_SECRET, SUPPLIER1_PHONE, SUPPLIER1_EMAIL, SUPPLIER2_EMAIL, CLIENT1_PHONE, CLIENT1_EMAIL, CLIENT2_PHONE, CLIENT2_EMAIL (the old OWNER_PHONE_*, OWNER_EMAIL_*, SUPPLIER_B_PHONE and TEST_SUPPLIER_PHONE still work as fallbacks),
 SESSION_SECRET (required: signs dashboard logins), VOYAGE_API_KEY (optional: corrected memories get embeddings). Mock delivery runs inline on Vercel (`VERCEL` is set), so MOCK_VOICE_DELIVERY is not needed.
 
 ## After the first deploy
