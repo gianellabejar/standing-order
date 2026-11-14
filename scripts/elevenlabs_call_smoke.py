@@ -1,4 +1,4 @@
-"""Places ONE outbound ElevenLabs call to TEST_SUPPLIER_PHONE (a teammate's verified phone only).
+"""Places ONE outbound ElevenLabs call to SUPPLIER1_PHONE (a teammate's verified phone only).
 Dry run by default; pass --yes to dial. Run: python scripts/elevenlabs_call_smoke.py --yes"""
 import os
 import sys
@@ -20,20 +20,20 @@ def fail(msg):
 
 def main():
     env = {k: os.environ.get(k) for k in ("ELEVENLABS_API_KEY", "ELEVENLABS_AGENT_ID",
-                                          "ELEVENLABS_PHONE_NUMBER_ID", "TEST_SUPPLIER_PHONE")}
+                                          "ELEVENLABS_PHONE_NUMBER_ID", "SUPPLIER1_PHONE")}
     missing = [k for k, v in env.items() if not v]
     if missing:
         fail(f"missing env: {', '.join(missing)}")
     body = {
         "agent_id": env["ELEVENLABS_AGENT_ID"],
         "agent_phone_number_id": env["ELEVENLABS_PHONE_NUMBER_ID"],
-        "to_number": env["TEST_SUPPLIER_PHONE"],
+        "to_number": env["SUPPLIER1_PHONE"],
         "conversation_initiation_client_data": {"dynamic_variables": {
             "shop_name": "Maple Bakery", "supplier_contact": "Dave", "item": "flour", "quantity": 1,
             "unit": "bag", "price_to_confirm": 3.20, "po_number": "SMOKE-0001", "delivery_day": "Friday"}},
     }
     if "--yes" not in sys.argv:
-        print("dry run, would POST", f"{BASE}/twilio/outbound-call", "to", env["TEST_SUPPLIER_PHONE"])
+        print("dry run, would POST", f"{BASE}/twilio/outbound-call", "to", env["SUPPLIER1_PHONE"])
         print("re-run with --yes to place the call")
         return
     h = {"xi-api-key": env["ELEVENLABS_API_KEY"]}

@@ -51,8 +51,8 @@ def wait_queryable(repos, tenant, q):
 
 def test_vector_search_prefilter_isolates_tenants_and_honours_status_and_expiry(live):
     repos, gov, emb = live
-    secret = gov.add(A, "terms", "Supplier B gives Maple Bakery 8% off list price.", SRC)
-    gov.add(B, "note", "Harbour Cafe closes on Mondays.", SRC)
+    secret = gov.add(A, "terms", "Gianella's Ingredients gives Sean's Bakery 8% off list price.", SRC)
+    gov.add(B, "note", "Cerebral Cafe closes on Mondays.", SRC)
     q = emb.embed(["what discount does supplier B give?"], "query")[0]
     wait_queryable(repos, A, q)
 
@@ -63,7 +63,7 @@ def test_vector_search_prefilter_isolates_tenants_and_honours_status_and_expiry(
     assert secret not in [m.id for m, _ in hits_b] and all(m.tenant_id == B for m, _ in hits_b)
     assert "8%" not in " ".join(m.text for m, _ in hits_b)
 
-    new = gov.correct(A, secret, "Supplier B gives Maple Bakery 5% off list price.", Source(type="sms", ref="live2"))
+    new = gov.correct(A, secret, "Gianella's Ingredients gives Sean's Bakery 5% off list price.", Source(type="sms", ref="live2"))
     deadline = time.time() + 60                                                   # index sync is eventually consistent
     while time.time() < deadline:
         ids = [m.id for m, _ in repos.memories.search_scored(A, q, 5)]

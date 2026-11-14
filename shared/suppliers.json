@@ -1,38 +1,40 @@
 [
   {
     "id": "supplier_a",
-    "name": "Alder Mill Supply (synthetic)",
+    "label": "Valley Foods",
+    "name": "Valley Foods",
     "short": "A",
     "order_channel": "email",
-    "email": "orders@alder-mill.example",
+    "email": "orders@valley-foods.example",
+    "email_env": "SUPPLIER2_EMAIL",
     "phone_env": null,
     "phone_default": null,
     "names": [
-      "Alder Mill",
-      "Gianella's Ingredients",
-      "Gianella’s Ingredients",
-      "Gianellas Ingredients"
+      "Valley Foods",
+      "Alder Mill"
     ],
     "domains": [
-      "alder-mill.example",
-      "gianellas-ingredients.example"
+      "alder-mill.example"
     ]
   },
   {
     "id": "supplier_b",
-    "name": "Birchway Wholesale (synthetic)",
+    "label": "Gianella's Ingredients",
+    "name": "Gianella's Ingredients",
     "short": "B",
     "order_channel": "phone",
-    "email": "orders@birchway.example",
-    "phone_env": "SUPPLIER_B_PHONE",
+    "email": "orders@gianellas-ingredients.example",
+    "email_env": "SUPPLIER1_EMAIL",
+    "phone_env": "SUPPLIER1_PHONE",
+    "phone_env_legacy": "SUPPLIER_B_PHONE",
     "phone_default": "+15550100099",
     "names": [
-      "Birchway",
-      "Valley Foods"
+      "Gianella's Ingredients",
+      "Gianellas Ingredients",
+      "Birchway"
     ],
     "domains": [
-      "birchway.example",
-      "valleyfoods.example"
+      "birchway.example"
     ]
   }
 ]

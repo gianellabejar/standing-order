@@ -32,7 +32,7 @@ Handling (implemented in `ingest/sms.py`):
 {
   "agent_id": "$ELEVENLABS_AGENT_ID",
   "agent_phone_number_id": "$ELEVENLABS_PHONE_NUMBER_ID",
-  "to_number": "$SUPPLIER_B_PHONE",
+  "to_number": "$SUPPLIER1_PHONE",
   "conversation_initiation_client_data": {
     "dynamic_variables": {
       "shop_name": "Maple Bakery",
@@ -63,7 +63,7 @@ Fields we rely on:
 An order is `confirmed` only if the extracted outcome has a confirmation number.
 
 ## Env vars
-See `.env.example`: MONGODB_URI, MONGODB_DB, DEEPSEEK_API_KEY, FALLBACK_LLM_API_KEY, VOYAGE_API_KEY (voyage-3.5, 1024 dims), TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, ELEVENLABS_API_KEY, ELEVENLABS_AGENT_ID, ELEVENLABS_PHONE_NUMBER_ID, ELEVENLABS_WEBHOOK_SECRET, SUPPLIER_B_PHONE, OWNER_PHONE_MAPLE, OWNER_PHONE_HARBOUR (team phones; fake +1555 numbers if unset), SMS_DRY_RUN, IMAP_HOST, IMAP_USER, IMAP_PASSWORD, SESSION_SECRET, PUBLIC_BASE_URL.
+See `.env.example`: MONGODB_URI, MONGODB_DB, DEEPSEEK_API_KEY, FALLBACK_LLM_API_KEY, VOYAGE_API_KEY (voyage-3.5, 1024 dims), TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, ELEVENLABS_API_KEY, ELEVENLABS_AGENT_ID, ELEVENLABS_PHONE_NUMBER_ID, ELEVENLABS_WEBHOOK_SECRET, SUPPLIER1_PHONE (old name SUPPLIER_B_PHONE), SUPPLIER1_EMAIL, SUPPLIER2_EMAIL, CLIENT1_EMAIL, CLIENT2_EMAIL, APP_EMAIL, CLIENT1_PHONE, CLIENT2_PHONE (team phones; fake +1555 numbers if unset; old names OWNER_PHONE_MAPLE/OWNER_PHONE_HARBOUR still read), SMS_DRY_RUN, IMAP_HOST, IMAP_USER, IMAP_PASSWORD, SESSION_SECRET, PUBLIC_BASE_URL.
 
 ## Seed data ids (stable across resets)
 Tenants `maple`, `harbour` (a tenant's `_id` is its `tenant_id`). Suppliers `supplier_a`, `supplier_b` (`shared/suppliers.py`; B's phone from `SUPPLIER_B_PHONE`). Flour SKU `FLR-AP-2KG`. Quotes `q_<tenant>_<supplier>_<sku>`, documents `doc_<tenant>_<supplier>_<pdf|email>`, memories `mem_*` (see `data/seed/memories.json`), prior order `ord_seed_maple_prev`. Records inserted without an id get a uuid4 hex string `_id`.
@@ -77,4 +77,4 @@ Tenants `maple`, `harbour` (a tenant's `_id` is its `tenant_id`). Suppliers `sup
 - Extraction: one DeepSeek call per document (`json_mode`), validated by `ingest.llm.Extraction`. Code then picks the supplier (names and domains in `shared/suppliers.json`), drops lines with no validity date or an expired one, and keeps `page` only if that page exists. An email body with no price-like text gets no LLM call.
 - Quotes: `source = {"document_id", "page" (PDF) or null (email), "kind"}`. A new quote for the same supplier and SKU sets older active ones to `status: "superseded"`, `superseded_by: <new id>` (history kept).
 - Interfaces: `ingest_email`, `extract_quotes_from_pdf`, `extract_quotes_from_email_text`, `extract_quotes_from_csv` in `shared/interfaces.py`.
-- Supplier matching (`shared/suppliers.json` `names`/`domains`) also recognises the new names "Gianella's Ingredients" (supplier_a, any apostrophe) and "Valley Foods" (supplier_b) and their `.example` domains. The display `name` fields are not renamed yet.
+- Supplier matching uses `shared/suppliers.json` `names`, `domains` and the supplier's email: supplier_a = Valley Foods (email ordering), supplier_b = Gianella's Ingredients (phone ordering, PDF catalogue). Sample catalogues: `data/catalogues/gianellas_ingredients_catalogue.pdf` and `data/catalogues/valley_foods_catalogue.csv`.

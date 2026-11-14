@@ -1,11 +1,11 @@
 {
   "_recorded": "real deepseek response, 2026-11-14, model via DEEPSEEK_MODEL",
   "_usage": {
-    "prompt": 384,
-    "completion": 226
+    "prompt": 390,
+    "completion": 349
   },
   "response": {
-    "supplier_name": "Valley Foods",
+    "supplier_name": "Gianella's Ingredients - Supplier 1 (SYNTHETIC DEMO DATA)",
     "quotes": [
       {
         "sku": "SUG-GR-2KG",
@@ -26,6 +26,6 @@
         "page": 1
       }
     ],
-    "notes": "Synthetic demo data. Prices are updated prices replacing the earlier list for these items, issued 2026-11-14 and valid until 2026-12-14. Prices are in CAD per unit, before any account discount."
+    "notes": "Document states these are UPDATED prices replacing earlier lists for these items, issued 2026-11-14, valid until 2026-12-14, in CAD per unit before any account discount. Synthetic demo data."
   }
 }

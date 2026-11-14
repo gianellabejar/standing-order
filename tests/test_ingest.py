@@ -69,7 +69,7 @@ def texts(monkeypatch):
 @pytest.fixture
 def extractor(monkeypatch):
     ex = CountingExtractor({"UPDATED prices": "llm_pdf_update", "List price catalogue": "llm_pdf_catalogue",
-                            "Gianella's Ingredients": "llm_email_quote"})
+                            "Alder Mill": "llm_email_quote", "Valley Foods": "llm_email_quote"})
     monkeypatch.setattr(llm, "EXTRACTOR", ex)
     return ex
 
@@ -98,7 +98,7 @@ def test_email_body_quotes(db, docs, extractor):
                                     ("supplier_a", "SUG-GR-2KG", "bag", 2.60)]
     assert all(q.valid_until == VALID_UNTIL for q in r.quotes)
     assert all(q.source == {"document_id": r.document.id, "page": None, "kind": "email"} for q in r.quotes)
-    assert r.document.kind == "email" and r.document.message_id == "<quote-2026-11-14@gianellas-ingredients.example>"
+    assert r.document.kind == "email" and r.document.message_id == "<quote-2026-11-14@alder-mill.example>"
 
 
 def test_each_document_is_parsed_once(db, docs, extractor):
@@ -113,7 +113,7 @@ def test_each_document_is_parsed_once(db, docs, extractor):
 def test_forwarded_email_routes_by_owner_and_parses_attachment(db, docs, extractor):
     m = EmailMessage()
     m["From"], m["To"], m["Subject"] = f"Maple Owner <{MAPLE_EMAIL.upper()}>", "inbox@example.com", "Fwd: new prices"
-    m.set_content("---------- Forwarded message ---------\nFrom: Valley Foods <orders@valleyfoods.example>\n"
+    m.set_content("---------- Forwarded message ---------\nFrom: Gianella's Ingredients <orders@gianellas-ingredients.example>\n"
                   "Subject: updated list\n\nSee attached.")
     m.add_attachment(docs["pdf_update"], maintype="application", subtype="pdf", filename="valley_foods_update.pdf")
     raw = bytes(m)
@@ -226,7 +226,7 @@ def test_poller_skips_existing_mail_then_ingests_new(db, docs, extractor, monkey
     def fwd(sender, attachment):
         m = EmailMessage()
         m["From"], m["Subject"] = sender, "Fwd: prices"
-        m.set_content("From: orders@valleyfoods.example\nsee attached")
+        m.set_content("From: orders@gianellas-ingredients.example\nsee attached")
         m.add_attachment(attachment, maintype="application", subtype="pdf", filename="b.pdf")
         return bytes(m)
     imap = FakeImap({1: b"From: old@example.com\n\nold mail", 2: b"From: old@example.com\n\nold mail 2"})
@@ -301,10 +301,10 @@ VALLEY_CSV = (ROOT / "data" / "catalogues" / "valley_foods_catalogue.csv").read_
 def test_valley_foods_csv_is_read_without_an_llm_call(db, extractor, texts):
     r = csv_quotes.ingest_csv("maple", VALLEY_CSV, filename="valley_foods_catalogue.csv", db=db)
     assert extractor.calls == 0 and r.document.tokens == {}                      # no tokens spent
-    assert r.document.kind == "csv" and r.document.status == "parsed" and r.document.supplier_id == "supplier_b"
-    assert quote_rows(r.quotes) == [("supplier_b", "BUT-UN-454G", "block", 5.95), ("supplier_b", "CRM-35-1L", "carton", 4.65),
-                                    ("supplier_b", "EGG-LG-30", "tray", 9.20), ("supplier_b", "FLR-AP-2KG", "bag", 3.48),
-                                    ("supplier_b", "MLK-2P-4L", "bag", 6.15), ("supplier_b", "YST-ID-500G", "pack", 6.75)]
+    assert r.document.kind == "csv" and r.document.status == "parsed" and r.document.supplier_id == "supplier_a"
+    assert quote_rows(r.quotes) == [("supplier_a", "BUT-UN-454G", "block", 6.10), ("supplier_a", "CRM-35-1L", "carton", 4.79),
+                                    ("supplier_a", "EGG-LG-30", "tray", 8.95), ("supplier_a", "FLR-AP-2KG", "bag", 3.45),
+                                    ("supplier_a", "MLK-2P-4L", "bag", 6.29), ("supplier_a", "YST-ID-500G", "pack", 6.49)]
     assert all(q.valid_until == VALID_UNTIL for q in r.quotes)
     flour = next(q for q in r.quotes if q.sku == "FLR-AP-2KG")
     assert flour.source == {"document_id": r.document.id, "page": None, "row": 2, "kind": "csv"}  # line 2 of the file
@@ -322,7 +322,7 @@ def test_csv_rows_are_validated_in_code(db, extractor):
            "Valley Foods;YST-ID-500G;pack;6.00;2026-11-01\n"  # expired
            "Mystery Co;BUT-UN-454G;block;5.00;2026-12-01\n").encode()
     r = csv_quotes.ingest_csv("maple", raw, filename="mixed.csv", db=db)
-    assert quote_rows(r.quotes) == [("supplier_b", "FLR-AP-2KG", "bag", 3.40)] and extractor.calls == 0
+    assert quote_rows(r.quotes) == [("supplier_a", "FLR-AP-2KG", "bag", 3.40)] and extractor.calls == 0
     reasons = {x["sku"]: x["reason"] for x in r.rejected}
     assert reasons == {"EGG-LG-30": "line 3: price missing or unreadable",
                        "MLK-2P-4L": "line 4: no readable validity date (use YYYY-MM-DD)",
@@ -337,7 +337,7 @@ def test_csv_without_a_known_supplier_saves_nothing_and_asks(db, extractor, text
     assert r.document.status == "unknown_supplier" and r.quotes == [] and extractor.calls == 0
     assert db.price_quotes.count_documents({}) == 0 and "which supplier" in texts[0][1].lower()
     named = csv_quotes.ingest_csv("maple", raw + b"\n", filename="valley_foods_prices.csv", db=db)  # name in filename
-    assert [q.supplier_id for q in named.quotes] == ["supplier_b"]
+    assert [q.supplier_id for q in named.quotes] == ["supplier_a"]
 
 
 def test_unfamiliar_csv_layout_falls_back_to_one_llm_call(db, monkeypatch):
@@ -350,7 +350,7 @@ def test_unfamiliar_csv_layout_falls_back_to_one_llm_call(db, monkeypatch):
     monkeypatch.setattr(llm, "EXTRACTOR", fake)
     raw = b"Article,Packaging,Cost per pack,Good through\nFlour FLR-AP-2KG,bag,3.48,2026-12-14\n"
     r = csv_quotes.ingest_csv("maple", raw, filename="list.csv", db=db)
-    assert calls == ["csv"] and quote_rows(r.quotes) == [("supplier_b", "FLR-AP-2KG", "bag", 3.48)]
+    assert calls == ["csv"] and quote_rows(r.quotes) == [("supplier_a", "FLR-AP-2KG", "bag", 3.48)]
     assert r.quotes[0].source == {"document_id": r.document.id, "page": None, "kind": "csv"}
 
 

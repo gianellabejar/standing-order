@@ -44,7 +44,7 @@ def detect_supplier(*texts: Optional[str]) -> Optional[str]:
     several suppliers match (we do not guess)."""
     hay = " ".join(t for t in texts if t).lower()
     hits = {s["id"] for s in all_suppliers()
-            if any(n.lower() in hay for n in s.get("names", []) + s.get("domains", []))}
+            if any(n.lower() in hay for n in s.get("names", []) + s.get("domains", []) + [s.get("email", "")] if n)}
     return hits.pop() if len(hits) == 1 else None
 
 

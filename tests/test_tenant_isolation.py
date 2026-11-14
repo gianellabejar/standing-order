@@ -11,7 +11,7 @@ from shared.models import Memory, Source
 
 A, B = "maple", "harbour"
 UNSCOPED = {"resolve_by_phone", "resolve_by_email", "resolve_by_owner_email"}  # the only allowed tenant-less reads
-SECRET = "Supplier B gives Maple Bakery 8% off list"
+SECRET = "Gianella's Ingredients gives Sean's Bakery 8% off list"
 
 
 def repo_classes():
