@@ -42,10 +42,15 @@ def sha256(raw: bytes) -> str:
 def detect_supplier(*texts: Optional[str]) -> Optional[str]:
     """Code, not LLM: the supplier whose name or email domain appears in the text. None if zero or
     several suppliers match (we do not guess)."""
-    hay = " ".join(t for t in texts if t).lower()
+    hay = _fold(" ".join(t for t in texts if t))
     hits = {s["id"] for s in all_suppliers()
-            if any(n.lower() in hay for n in s.get("names", []) + s.get("domains", []) + [s.get("email", "")] if n)}
+            if any(_fold(n) in hay for n in s.get("names", []) + s.get("domains", []) + [s.get("email", "")] if n)}
     return hits.pop() if len(hits) == 1 else None
+
+
+def _fold(s: str) -> str:
+    """Lowercase, and curly apostrophes as straight ones: Word and Gmail type "Gianella’s"."""
+    return s.lower().replace("’", "'").replace("‘", "'")
 
 
 def store_document(tenant_id: str, raw: bytes, kind: str, ref: str, db=None, **fields) -> tuple[Document, bool]:

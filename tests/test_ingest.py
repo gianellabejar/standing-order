@@ -365,6 +365,26 @@ def test_forwarded_email_with_csv_attachment(db, extractor):
     assert extractor.calls == 0                                                    # body had no prices, CSV is code
 
 
+def test_csv_decimal_comma_and_thousands_separator():
+    assert csv_quotes._price("3,48") == 3.48 and csv_quotes._price("$1,234.50") == 1234.50
+    assert csv_quotes._price("3.48 CAD") == 3.48 and csv_quotes._price("-2") is None and csv_quotes._price("") is None
+
+
+def test_supplier_detection_accepts_curly_apostrophes():
+    assert quotes.detect_supplier("Gianella’s Ingredients price list") == "supplier_b"
+    assert quotes.detect_supplier("Gianella's Ingredients price list") == "supplier_b"
+
+
+def test_sms_simulator_uses_the_same_phone_fallback_as_the_seed(monkeypatch):
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import sms_sim
+    monkeypatch.delenv("CLIENT1_PHONE", raising=False)
+    monkeypatch.setenv("OWNER_PHONE_MAPLE", "+15550101234")       # legacy name only
+    assert sms_sim.tenant_phone("maple") == "+15550101234"
+    monkeypatch.setenv("CLIENT1_PHONE", "+15550105678")           # new name wins
+    assert sms_sim.tenant_phone("maple") == "+15550105678"
+
+
 def test_csv_quotes_are_tenant_scoped(db, extractor):
     csv_quotes.ingest_csv("maple", VALLEY_CSV, db=db)
     assert dbm.PriceQuotes(db).list_valid("harbour") == [] and dbm.Documents(db).list("harbour") == []

@@ -32,7 +32,9 @@ def tenant_phone(tenant_id: str) -> str:
     t = next((t for t in load("tenants.json") if t["id"] == tenant_id), None)
     if t is None:
         raise SystemExit(f"unknown tenant {tenant_id!r}")
-    return os.environ.get(t["phone_env"]) or t["phone_default"]
+    # Same lookup as the seed: new role-based name (CLIENT1_PHONE) first, then the legacy one (OWNER_PHONE_MAPLE).
+    names = (t.get("phone_env"), t.get("phone_env_legacy"))
+    return next((os.environ[n].strip() for n in names if n and os.environ.get(n, "").strip()), t["phone_default"])
 
 
 def payload(sender: str, body: str, sid: str | None = None) -> dict:

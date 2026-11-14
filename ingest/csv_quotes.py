@@ -53,7 +53,11 @@ def map_columns(headers: list[str]) -> dict[str, str]:
 
 
 def _price(s: str) -> Optional[float]:
-    s = re.sub(r"(?i)cad|\$|,|\s", "", s or "")
+    s = re.sub(r"(?i)cad|\$|\s", "", s or "")
+    if re.fullmatch(r"\d+,\d{1,2}", s):  # decimal comma ("3,48", common in semicolon CSVs): 3.48, not 348
+        s = s.replace(",", ".")
+    else:                                # thousands separators ("1,234.50")
+        s = s.replace(",", "")
     try:
         v = float(s)
     except ValueError:
