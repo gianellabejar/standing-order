@@ -1,10 +1,11 @@
-"""Canned post-call payloads for the mock provider.
+"""Canned post-call payloads for the mock provider. A MINIMAL SUBSET of a real response.
 
-UNVERIFIED AGAINST A REAL CALL. The shape follows the example payload in the ElevenLabs post-call
-webhook docs (type / event_timestamp / data.{agent_id, conversation_id, status, transcript, metadata,
-analysis, conversation_initiation_client_data}), using only fields shown in that example. Failure
-webhooks (call initiation failure) are a separate event type whose fields we have not seen, so
-"no answer" is modelled as a transcript with no supplier (`user`) turn.
+Checked against fixtures/real_post_call.json (a real GET /conversations/{id} response, redacted): the
+transcript turn fields, data.status "done", metadata.call_duration_secs / termination_reason, the analysis
+keys and the echoed dynamic_variables all exist there. NOT yet verified against a real call: the webhook
+envelope (type / event_timestamp / data), because no webhook has been received, and any supplier turn
+that contains a confirmation number. "no answer" here is a transcript with no supplier turn; the real
+no-answer shape is fixtures/real_no_answer.json (metadata.phone_call.call_result == "no_answer").
 """
 import time
 

@@ -202,3 +202,29 @@ def test_combined_app_serves_sms_and_voice_routes():
     assert c.get("/healthz").status_code == 200
     assert c.post("/sms/inbound", data={}).status_code != 404   # exists (rejects the empty request)
     assert c.post("/voice/post-call", json={}).status_code != 404
+
+
+def test_real_voicemail_call_is_needs_owner_with_no_number(env):
+    """fixtures/real_post_call.json: a REAL call (redacted) that reached a carrier voicemail."""
+    import json
+    real = json.load(open("fixtures/real_post_call.json"))
+    out = parse_post_call_payload(real)
+    assert real["status"] == "done" and len(real["transcript"]) == 30
+    assert (out.status, out.confirmation_number) == ("needs_owner", None) and "voicemail" in out.needs_owner_reason
+    # through the ledger: the same transcript can never confirm an order
+    _, repos, prov, _ = env
+    o = planned(repos)
+    cid = ledger.start_call(A, o.id, dict(BRIEF), repos, provider=prov)
+    assert ledger.apply_outcome(A, cid, out, repos).status == OrderStatus.needs_owner
+    assert find_number(real["transcript"]) is None
+
+
+def test_real_dynamic_variables_are_echoed_back():
+    import json
+    dv = json.load(open("fixtures/real_post_call.json"))["conversation_initiation_client_data"]["dynamic_variables"]
+    assert dv["shop_name"] == "Maple Bakery" and dv["po_number"] == "TEST-0001" and dv["quantity"] == 1
+
+
+def find_number(transcript):
+    from agent.voice import find_confirmation_number
+    return find_confirmation_number(transcript)

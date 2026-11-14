@@ -16,6 +16,9 @@ log = logging.getLogger("voice")
 CONF_RE = re.compile(r"confirmation\s+(?:number|code|#)?\s*(?:is|:)?\s*([A-Za-z0-9][A-Za-z0-9-]{2,})", re.I)
 
 
+VOICEMAIL_RE = re.compile(r"record your message|leave (?:a|your) message|after the (?:beep|tone)|voicemail", re.I)
+
+
 def find_confirmation_number(transcript: list[dict]) -> Optional[str]:
     """Only the supplier's (`user`) turns count, and a number must contain a digit."""
     for turn in transcript:
@@ -28,7 +31,7 @@ def find_confirmation_number(transcript: list[dict]) -> Optional[str]:
 
 
 def parse_post_call_payload(payload: dict) -> CallOutcome:
-    """Plain code, no LLM. Parses the ElevenLabs-shaped post-call payload (unverified against a real call)."""
+    """Plain code, no LLM. Accepts the webhook envelope ({type, data}) or a GET /conversations/{id} response."""
     if "data" not in payload and "transcript" in payload:  # GET /conversations/{id} response shape
         payload = {"type": "post_call_transcription", "data": payload}
     if payload.get("type") != "post_call_transcription":
@@ -42,7 +45,10 @@ def parse_post_call_payload(payload: dict) -> CallOutcome:
     call = ((data.get("metadata") or {}).get("phone_call") or {})
     if call.get("call_result") == "no_answer":  # seen in a real response (fixtures/real_no_answer.json)
         return CallOutcome(status="needs_owner", transcript=transcript, needs_owner_reason="no_answer: supplier did not pick up")
-    supplier = [t for t in transcript if t.get("role") == "user" and t.get("message")]
+    supplier = [t for t in transcript if t.get("role") == "user" and (t.get("message") or "").strip("… .")]
+    if any(VOICEMAIL_RE.search(t["message"]) for t in supplier):  # seen in a real call: carrier voicemail answered
+        return CallOutcome(status="needs_owner", transcript=transcript,
+                           needs_owner_reason="voicemail: no person took the order")
     if data.get("status") == "failed":
         return CallOutcome(status="failed", transcript=transcript, needs_owner_reason="call failed")
     if not supplier:
