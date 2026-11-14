@@ -257,3 +257,21 @@ def test_number_only_counts_after_agent_asks_and_from_supplier():
     assert f([T("agent", "Your confirmation number?"), T("user", "Let me check")]) is None    # no digits
     assert f([T("agent", "Your confirmation number?"), T("user", "It is MB-48213")]) == "MB-48213"
     assert f([T("agent", "My confirmation number is AI-123")]) is None                        # agent turn
+
+
+def test_real_webhook_voicemail_through_the_endpoint(env):
+    """fixtures/real_webhook_voicemail.json: a REAL webhook body (redacted), replayed through /voice/post-call
+    with the mock provider (no signature check in mock mode; the real signature path ran on Vercel)."""
+    import json
+    real = json.load(open("fixtures/real_webhook_voicemail.json"))
+    _, repos, prov, client = env
+    o = planned(repos)
+    cid = ledger.start_call(A, o.id, dict(BRIEF), repos, provider=prov)
+    real["data"]["conversation_id"] = cid
+    dv = real["data"]["conversation_initiation_client_data"]["dynamic_variables"]
+    dv["tenant_id"], dv["order_id"] = A, o.id
+    r = client.post("/voice/post-call", json=real)
+    assert r.status_code == 200 and r.json()["status"] == "needs_owner"
+    got = repos.orders.get(A, o.id)
+    assert "voicemail" in got.needs_owner_reason and got.confirmation_number is None
+    assert repos.calls.get_by_conversation(A, cid).raw_post_call["type"] == "post_call_transcription"
