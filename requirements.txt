@@ -8,3 +8,6 @@ python-multipart
 twilio
 elevenlabs
 pypdf
+tiktoken
+langgraph
+langgraph-checkpoint-mongodb
