@@ -1,8 +1,10 @@
-"""Tenant B must never read tenant A's memories through any repository method."""
+"""Tenant B must never read tenant A's memories through any repository method.
+Runs on in-memory Mongo (mongomock) by default; with MONGODB_URI set it runs on Atlas and also checks Vector Search."""
 import inspect
 import uuid
 import os
 
+import mongomock
 import pytest
 from pymongo import MongoClient
 
@@ -27,10 +29,14 @@ def test_every_public_method_requires_tenant_id_first():
             assert params[1] == "tenant_id", f"{cls.__name__}.{name} must take tenant_id first"
 
 
+LIVE = bool(os.environ.get("MONGODB_URI"))
+
+
 @pytest.fixture
 def mem():
-    if not os.environ.get("MONGODB_URI"):
-        pytest.skip("MONGODB_URI not set")
+    if not LIVE:  # in-memory: everything except $vectorSearch, which only Atlas runs
+        yield dbmod.Memories(mongomock.MongoClient(tz_aware=True)["t"])
+        return
     client = MongoClient(os.environ["MONGODB_URI"])
     name = f"orderdesk_test_{uuid.uuid4().hex[:8]}"  # per run: the sandbox is shared
     db = client[name]
@@ -46,7 +52,8 @@ def test_tenant_b_cannot_read_tenant_a_memories(mem):
     assert mem.get(B, mid) is None
     assert mem.list(B) == []
     assert mem.list_active(B) == []
-    assert mem.search(B, [0.1] * dbmod.EMBED_DIM, k=5) == []  # needs the vector index to exist
+    if LIVE:
+        assert mem.search(B, [0.1] * dbmod.EMBED_DIM, k=5) == []  # needs the vector index to exist
     mem.expire(B, mid)
     with pytest.raises(LookupError):
         mem.supersede(B, mid, Memory(tenant_id=B, kind="terms", text="x", source=Source(type="sms", ref="y")))

@@ -1,4 +1,4 @@
-"""Pydantic models matching the collections in CLAUDE.md section 4."""
+"""Pydantic models for the MongoDB collections (one class per collection, plus embedded types)."""
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Literal, Optional

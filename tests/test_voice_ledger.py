@@ -198,6 +198,7 @@ def test_inline_delivery_posts_after_call_record_exists(env, monkeypatch):
 
 def test_combined_app_serves_sms_and_voice_routes():
     import app as root
+    root.app.dependency_overrides[get_db] = lambda: mongomock.MongoClient(tz_aware=True)["t"]  # no Atlas needed
     c = TestClient(root.app)
     assert c.get("/healthz").status_code == 200
     assert c.post("/sms/inbound", data={}).status_code != 404   # exists (rejects the empty request)
