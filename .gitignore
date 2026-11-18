@@ -6,3 +6,6 @@ __pycache__/
 .venv/
 .DS_Store
 data/generated/
+
+# Local working notes for Claude Code, not published
+CLAUDE.md

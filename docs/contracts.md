@@ -35,7 +35,7 @@ Handling (implemented in `ingest/sms.py`):
   "to_number": "$SUPPLIER1_PHONE",
   "conversation_initiation_client_data": {
     "dynamic_variables": {
-      "shop_name": "Maple Bakery",
+      "shop_name": "Sean's Bakery",
       "supplier_contact": "Dave",
       "item": "all-purpose flour 20kg",
       "quantity": 40,

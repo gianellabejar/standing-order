@@ -4,7 +4,7 @@ Everything under `data/` is made up for the hackathon demo. The businesses, supp
 
 | File | What |
 |---|---|
-| `seed/tenants.json` | Maple Bakery (main) and Harbour Cafe (for the leak demo) |
+| `seed/tenants.json` | Sean's Bakery (main, tenant id `maple`) and Cerebral Cafe (for the leak demo, tenant id `harbour`) |
 | `../shared/suppliers.json` | Supplier A (quotes by email) and Supplier B (PDF catalogue, phone orders), with the names and email domains code uses to recognise them. It lives in `shared/` because the app reads it at runtime and `data/` is not deployed |
 | `seed/catalogue.json` | The one source for both supplier documents' prices |
 | `seed/memories.json` | **Seeded memories.** Each is stored with `seeded: true` and must be disclosed in the demo |

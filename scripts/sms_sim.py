@@ -3,7 +3,7 @@ carrier. If TWILIO_AUTH_TOKEN is set it signs the request, so it takes the same 
 
   python scripts/sms_sim.py --list                       # the prepared owner texts
   python scripts/sms_sim.py --text 1                     # send prepared text #1 (from its tenant)
-  python scripts/sms_sim.py --tenant harbour "Need oats" # free text as Harbour Cafe
+  python scripts/sms_sim.py --tenant harbour "Need oats" # free text as Cerebral Cafe
   python scripts/sms_sim.py --tenant maple               # interactive: type messages, Ctrl+C to quit
 """
 import argparse
